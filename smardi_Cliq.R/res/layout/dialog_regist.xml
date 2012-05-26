@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#DDDDDD" >
+    <RelativeLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:background="#B42747" >
+	    <ImageView 
+	    android:id="@+id/d_check"
+	    android:layout_width="30dp"
+	    android:layout_height="30dp"
+	    android:layout_alignParentLeft="true"
+	    android:layout_centerVertical="true"
+	    android:layout_marginLeft="10dp"
+	    android:src="@drawable/yellow_check_svg"
+	    android:scaleType="fitStart"
+	    />
+	    <TextView 
+	        android:text="@string/dialog_regist_title"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentRight="true"
+	        android:layout_marginLeft="40dp"
+	        android:paddingLeft="5dp"
+	        android:paddingTop="15dp"
+	        android:paddingBottom="15dp"
+	        android:textColor="#FFFFFF"
+	        android:textSize="20sp"/>
+    </RelativeLayout>
+    <TextView 
+        android:id="@+id/txt_dialogContent"
+        android:text="@string/dialog_regist_content"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:textColor="#000000"
+        android:textSize="15sp"/>
+	<ImageView 
+	    android:id="@+id/btn_next"
+	    android:layout_width="fill_parent"
+	    android:layout_height="80dp"
+	    android:paddingBottom="10dp"
+	    android:src="@drawable/c_btn_next"
+	    android:scaleType="fitCenter"
+	    />
+</LinearLayout>

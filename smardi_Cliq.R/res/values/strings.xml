@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, Main!</string>
+    <string name="app_name">CLIQ.r</string>
+    <string name="dialog_regist_title">CLIQ.r 등록</string>
+    <string name="dialog_regist_content">3초 뒤에 초록색 동그라미가 보일 때마다 CLIQ.r의 스위치를 눌러 주세요.</string>
+    <string name="dialog_regist_content_done">성공적으로 클리커를 등록하였습니다!</string>
+    <string name="progressdialog_title" />
+    <string name="progressdialog_msg">Calculating.. Please wait..</string>
+    <string name="dialog_test_title">Connection with Cliq test</string>
+    <string name="dialog_test_content">클리커 버튼을 누르면 회색 원이 녹색으로 변하는지 확인 하십시오.\n만약 그렇지 않을 경우 클리커를 다시 등록해야 합니다.</string>
+    <string name="toast_error_clicker_not_regist">Please regist your Cliq.R</string>
+    <string name="inline_preferences">In-line preferences</string>
+    <string name="dialog_based_preferences">Dialog-based preferences</string>
+    <string name="launch_preferences">Launch preferences</string>
+    <string name="preference_attributes">Preference attributes</string>
+    <string name="title_toggle_preference">Toggle preference</string>
+    <string name="summary_toggle_preference">This is a toggle button</string>
+    <string name="title_edittext_preference">Edit text preference</string>
+    <string name="summary_edittext_preference">An example that uses an edit text dialog</string>
+    <string name="dialog_title_edittext_preference">Enter your favorite animal</string>
+    <string name="title_list_preference">List preference</string>
+    <string name="summary_list_preference">An example that uses a list dialog</string>
+    <string name="dialog_title_list_preference">Choose one</string>
+    <string name="title_screen_preference">Screen preference</string>
+    <string name="summary_screen_preference">Shows another screen of preferences</string>
+    <string name="title_next_screen_toggle_preference">Toggle preference</string>
+    <string name="summary_next_screen_toggle_preference">Preference that is on the next screen but same hierarchy</string>
+    <string name="title_intent_preference">Intent preference</string>
+    <string name="summary_intent_preference">Launches an Activity from an Intent</string>
+    <string name="title_parent_preference">Parent toggle</string>
+    <string name="summary_parent_preference">This is visually a parent</string>
+    <string name="title_child_preference">Child toggle</string>
+    <string name="summary_child_preference">This is visually a child</string>
+    <string name="preferences_from_code">App/Preferences/5. Preferences from code</string>
+    <string name="dialog_regist_fail">CLIQ.r 등록에 실패했습니다.\n클리커 상태를 확인 해 주시고 다시 한번 시도 해 주시기 바랍니다.</string>
+    <string name="setting_title">어플리케이션 설정</string>
+    <string name="setting_category_1st_title">CLIQ.r 통신 설정</string>
+    <string name="setting_category_2nd_title">카메라 설정</string>
+    <string name="setting_registration_title">CLIQ.r 기기 등록</string>
+    <string name="setting_communication_test_title">CLIQ.r 통신 테스트</string>
+    <string name="setting_change_sensitivity_title">민감도 설정</string>
+    <string name="setting_registration_content">CLIQ.r의 신호를 등록합니다.</string>
+    <string name="setting_communication_test_content">CLIQ.r과의 연결을 테스트합니다.</string>
+    <string name="setting_change_sensitivity_content">CLIQ.r의 신호를 인식하는 민감도를 설정합니다.</string>
+    <string name="setting_scene_mode_title">장면 모드 설정</string>
+    <string name="setting_white_balance_title">화이트 벨런스</string>
+    <string name="setting_color_effect_title">색조 효과</string>
+    <string name="setting_rear_resolution_title">후면 카메라 해상도</string>
+    <string name="setting_front_resolution_title">전면 카메라 해상도</string>
+    <string name="backButtonToast">뒤로가기 버튼을 한번 더 누르면 종료합니다.</string>
+    <string name="alert_no_regist_cliq_title">CLIQ.r 등록이 필요합니다.</string>
+    <string name="alert_no_regist_cliq_message">CLIQ.r을 이용하여 촬영하시려면 CLIQ.r를 등록하셔야 합니다.\n[CLIQ.r 기기 등록]을 수행 해 주세요.</string>
+
+</resources>

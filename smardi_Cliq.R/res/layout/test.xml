@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <Button
+        android:id="@+id/btn_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="측정시작" />
+
+    <Button
+        android:id="@+id/btn_test_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="테스트시작" />
+
+    <Button
+        android:id="@+id/btn_gray_on"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="회색ON" />
+
+    <Button
+        android:id="@+id/btn_end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="측정 끝" />
+    <Button
+        android:id="@+id/btn_mode_none"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="클리커사용안함" />
+    <Button
+        android:id="@+id/btn_mode_amplitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="소리세기" />
+    <Button
+        android:id="@+id/btn_mode_frequency"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="주파수모드" />
+	<TextView
+	    android:id="@+id/txt_clicked"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="클릭여부?"
+	    ></TextView>
+	    
+</LinearLayout>

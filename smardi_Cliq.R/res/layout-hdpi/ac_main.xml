@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <!-- 사진 -->
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:id="@+id/surfaceWrap" >
+
+        <org.smardi.Cooliq.R.Surface_Picture_Preview
+            android:id="@+id/surfacePreview"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" >
+        </org.smardi.Cooliq.R.Surface_Picture_Preview>
+    </LinearLayout>
+    
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:id="@+id/whiteScreen"
+        android:background="#000000"
+        android:visibility="gone" >
+        <!-- 사진이 찍히면 나타나는 흰색 화면 -->
+	</LinearLayout>
+
+    <!-- 왼편 컨트롤 버튼들 레이아웃 -->
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" >
+
+        <LinearLayout
+            android:id="@+id/control_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_alignParentLeft="true"
+            android:orientation="vertical"
+            android:padding="0dp" >
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="20" />
+
+            <LinearLayout
+                android:layout_width="60dp"
+                android:layout_height="0dp"
+                android:layout_weight="680"
+                android:background="@drawable/background_control"
+                android:orientation="vertical"
+                android:padding="0dp" >
+
+                <TextView
+                    android:layout_width="60dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="27.2"
+                    android:text="" />
+
+                <ImageView
+                    android:id="@+id/btn_change_camera"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_margin="0dp"
+                    android:layout_weight="136"
+                    android:clickable="true"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/c_back_camera" />
+ 
+                <ImageView
+                    android:id="@+id/btn_record_mode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_margin="0dp"
+                    android:layout_weight="136"
+                    android:clickable="true"
+                    android:contentDescription="picture"
+                    android:src="@drawable/c_mode_picture"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:layout_width="60dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="27.2"
+                    android:text="" />
+
+                <ImageView
+                    android:id="@+id/btn_flash"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_margin="0dp"
+                    android:layout_weight="136"
+                    android:clickable="true"
+                    android:src="@drawable/c_flash_auto" />
+
+                <TextView
+                    android:layout_width="60dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="27.2"
+                    android:text="" />
+
+                <ImageView
+                    android:id="@+id/btn_timer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_margin="0dp"
+                    android:layout_weight="136"
+                    android:clickable="true"
+                    android:src="@drawable/c_timer_0" />
+
+                <TextView
+                    android:layout_width="60dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="27.2"
+                    android:text="" />
+
+                <ImageView
+                    android:id="@+id/btn_setting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_margin="0dp"
+                    android:layout_weight="136"
+                    android:clickable="true"
+                    android:src="@drawable/c_setting" />
+
+                <TextView
+                    android:layout_width="60dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="27.2"
+                    android:text="" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="19" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btn_slide"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/control_layout"
+            android:gravity="left|center_vertical"
+            android:orientation="horizontal"
+            android:paddingRight="20dp" >
+
+            <ImageView
+                android:id="@+id/img_slide"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:scaleType="fitStart"
+                android:src="@drawable/slide_control_out" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <!-- 왼편 컨트롤 버튼들 레이아웃 -->
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" >
+
+        <LinearLayout
+            android:id="@+id/shutter_layout"
+            android:layout_width="70dp"
+            android:layout_height="fill_parent"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/background_shtter_layout"
+            android:clickable="true"
+            android:orientation="vertical" >
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="46" />
+
+            <!-- ON/OFF -->
+
+            <FrameLayout
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="56"
+                android:background="#00323232" >
+
+                <ImageView
+                    android:id="@+id/btn_mode_change"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:clickable="true"
+                    android:src="@drawable/button_mode_off" />
+            </FrameLayout>
+
+            <!-- ON/OFF 알림 표시 -->
+
+            <ImageView
+                android:id="@+id/light_cliq"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="100"
+                android:clickable="true"
+                android:src="@drawable/cliq_off" />
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="61" />
+
+            <!-- 셔터 버튼 -->
+
+            <ImageView
+                android:id="@+id/btn_shutter"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="199"
+                android:clickable="true"
+                android:src="@drawable/c_shutter" />
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="121" />
+            <!--
+            <ImageView
+                android:id="@+id/light_on_air"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="23"
+                android:clickable="true"
+                android:src="@drawable/on_air_off" /> 
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="50" />
+            -->
+            <!-- 갤러리 묶음 -->
+
+            <FrameLayout
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="99" >
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:orientation="vertical"
+                    android:padding="0dp" >
+
+                    <!--
+                    <TextView
+                        android:layout_width="fill_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="55" />
+                    -->
+
+                    <ImageView
+                        android:id="@+id/btn_gallary"
+                        android:layout_width="fill_parent"
+                        android:layout_height="0dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_weight="95"
+                        android:clickable="true" />
+
+                    <!--
+                         <TextView
+                        android:layout_width="fill_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="42" />
+                    -->
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:src="@drawable/gallary_frame" />
+            </FrameLayout>
+
+            <!-- 마지막 여백 -->
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="39" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txt_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_toLeftOf="@id/shutter_layout"
+            android:text=""
+            android:textColor="#77FFFFFF"
+            android:textSize="60sp" />
+    </RelativeLayout>
+
+    <!-- 사운드 감도 조절 -->
+
+    <FrameLayout
+        android:id="@+id/sound_sensitivity_wrap"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_gravity="center_horizontal|bottom" >
+
+        <ImageView
+            android:layout_width="600px"
+            android:layout_height="71px"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/sound_sensitivity_back" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="horizontal" >
+
+            <ImageView
+                android:layout_width="62px"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sound_sensitivity_bar_l" />
+
+            <ImageView
+                android:id="@+id/sound_sensitivity_bar"
+                android:layout_width="507px"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sound_sensitivity_bar" />
+
+            <ImageView
+                android:layout_width="31px"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sound_sensitivity_bar_r" />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical" >
+
+            <ImageView
+                android:id="@+id/sound_sensitivity_seekbar_left"
+                android:layout_width="32px"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:src="@drawable/sound_sensitivity_seeker_l" />
+
+            <ImageView
+                android:id="@+id/sound_sensitivity_seeker"
+                android:layout_width="64px"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="300px"
+                android:layout_toRightOf="@id/sound_sensitivity_seekbar_left"
+                android:src="@drawable/sound_sensitivity_seeker" />
+        </RelativeLayout>
+    </FrameLayout>
+
+    <!-- 튜토리얼 -->
+
+    <RelativeLayout
+        android:id="@+id/tutorial"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="#A6000000" >
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_alignParentLeft="true"
+            android:scaleType="fitStart"
+            android:src="@drawable/tutorial_left" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_centerInParent="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/tutorial_center" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_alignParentRight="true"
+            android:scaleType="fitEnd"
+            android:src="@drawable/tutorial_right" />
+    </RelativeLayout>
+    <!--
+    <ImageView
+        android:id="@+id/tutorial"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@drawable/tutorial" />
+    -->
+
+</FrameLayout>

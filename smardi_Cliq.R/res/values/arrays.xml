@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="whiteBalance_en">
+        <item>AUTO</item>
+        <item>auto</item>
+        <item>cloudy-daylight</item>
+        <item>daylight</item>
+        <item>fluorescent</item>
+        <item>incandescent</item>
+        <item>shade</item>
+        <item>twilight</item>
+        <item>warm-fluorescent</item>
+    </string-array>
+    <string-array name="whiteBalance_ko">
+        <item>자동</item>
+        <item>자동</item>
+        <item>흐림</item>
+        <item>태양광</item>
+        <item>형광등</item>
+        <item>백열등</item>
+        <item>그늘</item>
+        <item>석양</item>
+        <item>화사한</item>
+    </string-array>
+    <string-array name="sceneMode_en">
+        <item>action</item>
+        <item>auto</item>
+        <item>barcode</item>
+        <item>beach</item>
+        <item>candlelight</item>
+        <item>fireworks</item>
+        <item>landscape</item>
+        <item>night</item>
+        <item>night_portrait</item>
+        <item>party</item>
+        <item>portrait</item>
+        <item>snow</item>
+        <item>sports</item>
+        <item>steadyphoto</item>
+        <item>sunset</item>
+        <item>theatre</item>
+        <item>flowers</item>
+        <item>backlight</item>
+        <item>dusk-dawn</item>
+        <item>fall-color</item>
+        <item>text</item>
+    </string-array>
+    <string-array name="sceneMode_ko">
+        <item>동작</item>
+        <item>자동</item>
+        <item>바코드</item>
+        <item>해변</item>
+        <item>촛불</item>
+        <item>불꽃놀이</item>
+        <item>가로</item>
+        <item>야간</item>
+        <item>야간 인물사진</item>
+        <item>파티장/실내</item>
+        <item>인물사진</item>
+        <item>설경</item>
+        <item>스포츠</item>
+        <item>흔들림방지</item>
+        <item>일몰</item>
+        <item>극장</item>
+        <item>극장</item>
+        <item>역광</item>
+        <item>해닐녘</item>
+        <item>가을 풍경</item>
+        <item>문자</item>
+    </string-array>
+    <string-array name="colorEffect_en">
+        <item>aqua</item>
+        <item>blackboard</item>
+        <item>mono</item>
+        <item>negative</item>
+        <item>none</item>
+        <item>posterize</item>
+        <item>sepia</item>
+        <item>solarize</item>
+        <item>whiteboard</item>
+    </string-array>
+    <string-array name="colorEffect_ko">
+        <item>바다색</item>
+        <item>블랙보드</item>
+        <item>흑백</item>
+        <item>반전</item>
+        <item>없음</item>
+        <item>포스터화</item>
+        <item>세피아</item>
+        <item>과대노출</item>
+        <item>화이트보드</item>
+    </string-array>
+</resources>
