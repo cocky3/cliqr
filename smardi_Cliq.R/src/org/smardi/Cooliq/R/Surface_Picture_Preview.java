@@ -13,12 +13,14 @@ import android.view.*;
 public class Surface_Picture_Preview extends SurfaceView implements
 		SurfaceHolder.Callback {
 	private boolean D = false;
-	
+
 	SurfaceHolder mHolder;
 	Camera mCamera = null;
 	Context mContext = null;
 	public CameraParameters mCameraParameters;
 	public boolean isSetCameraParameters = false;
+	
+	public boolean isLoadCameraparameterSuccese = false;	//surfacechanged에서 제대로 불러왔는지
 
 	// Camera preference
 	Manage_Camera_SharedPreference mCameraPref;
@@ -26,7 +28,7 @@ public class Surface_Picture_Preview extends SurfaceView implements
 	public final static int CAMERA_BACK = 0;
 	public final static int CAMERA_FACE = 1;
 	private int whichCamera = 0;
-	
+
 	public String ACTION_SURFACE_CHANGED = "org.smardi.Cliq.r.surfacechange";
 
 	public Surface_Picture_Preview(Context context, AttributeSet attr) {
@@ -71,78 +73,90 @@ public class Surface_Picture_Preview extends SurfaceView implements
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,
 			int height) {
-		// 표면의 크기가 결정될 때 최적의 미리보기 크기를 구해 설정한다.
-		Camera.Parameters params = mCamera.getParameters();
-			
-		List<Size> arSize = params.getSupportedPreviewSizes();
-		if(true) {
-			for (Size size : arSize) {
-				Log.i("smardi.Cliq", "preview:" + size.width + " x " + size.height);
-			}
-		}
+		try {
+			// 표면의 크기가 결정될 때 최적의 미리보기 크기를 구해 설정한다.
+			Camera.Parameters params = mCamera.getParameters();
 
-		if (arSize == null) {
-			params.setPreviewSize(width, height);
-		} else {
-			int diff = 10000;
-			Size opti = null;
-			for (Size s : arSize) {
-				if (Math.abs(s.height - height) < diff) {
-					diff = Math.abs(s.height - height);
-					opti = s;
+			List<Size> arSize = params.getSupportedPreviewSizes();
+			if (true) {
+				for (Size size : arSize) {
+					/*Log.i("smardi.Cliq", "preview:" + size.width + " x "
+							+ size.height);*/
 				}
 			}
-			
-			//getOptimalPreviewSize 함수를 이용해서 최적 사이즈를 구함
-			//opti = getOptimalPreviewSize(arSize, width, height);
-			
-			params.setPreviewSize(opti.width, opti.height);
-			
-			//-----------------------------------------------------------------
-			//params.setPreviewSize(width, height);
-			
-			//-----------------------------------------------------------------
-			
-			if(D) {
-				Log.e("smardi.Cliq", "opti.w:"+opti.width+" opti.h:"+opti.height);
-			}
-		}
-		mCamera.setParameters(params);
-		mCamera.startPreview();
 
-		setCameraParameters(params);
-		isSetCameraParameters = true;
-		
-		//화면이 갱신된 것을 방송으로 전달
-		mContext.sendBroadcast(new Intent().setAction(ACTION_SURFACE_CHANGED));
+			if (arSize == null) {
+				params.setPreviewSize(width, height);
+			} else {
+				int diff = 10000;
+				Size opti = null;
+				for (Size s : arSize) {
+					if (Math.abs(s.height - height) < diff) {
+						diff = Math.abs(s.height - height);
+						opti = s;
+					}
+				}
+
+				// getOptimalPreviewSize 함수를 이용해서 최적 사이즈를 구함
+				// opti = getOptimalPreviewSize(arSize, width, height);
+
+				params.setPreviewSize(opti.width, opti.height);
+
+				// -----------------------------------------------------------------
+				// params.setPreviewSize(width, height);
+
+				// -----------------------------------------------------------------
+
+				if (D) {
+					Log.e("smardi.Cliq", "opti.w:" + opti.width + " opti.h:"
+							+ opti.height);
+				}
+			}
+			mCamera.setParameters(params);
+			mCamera.startPreview();
+
+			setCameraParameters(params);
+			isSetCameraParameters = true;
+
+			isLoadCameraparameterSuccese = true;
+			
+			// 화면이 갱신된 것을 방송으로 전달
+			mContext.sendBroadcast(new Intent()
+					.setAction(ACTION_SURFACE_CHANGED));
+		} catch (Exception e) {
+			Log.e("Cliq", "Error in SurfaceChange");
+			isLoadCameraparameterSuccese = false;
+		}
 	}
-	
+
 	@SuppressWarnings("unused")
 	private Size getOptimalPreviewSize(List<Size> sizes, int w, int h) {
-		 final double ASPECT_TOLERANCE = 0.05;
-	        double targetRatio = (double) w / h;
-	        if (sizes == null) return null;
-	        Size optimalSize = null;
-	        double minDiff = Double.MAX_VALUE;
-	        int targetHeight = h;
-	        for (Size size : sizes) {
-	            double ratio = (double) size.width / size.height;
-	            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
-	            if (Math.abs(size.height - targetHeight) < minDiff) {
-	                optimalSize = size;
-	                minDiff = Math.abs(size.height - targetHeight);
-	            }
-	        }
-	        if (optimalSize == null) {
-	            minDiff = Double.MAX_VALUE;
-	            for (Size size : sizes) {
-	                if (Math.abs(size.height - targetHeight) < minDiff) {
-	                    optimalSize = size;
-	                    minDiff = Math.abs(size.height - targetHeight);
-	                }
-	            }
-	        }
-	        return optimalSize;
+		final double ASPECT_TOLERANCE = 0.05;
+		double targetRatio = (double) w / h;
+		if (sizes == null)
+			return null;
+		Size optimalSize = null;
+		double minDiff = Double.MAX_VALUE;
+		int targetHeight = h;
+		for (Size size : sizes) {
+			double ratio = (double) size.width / size.height;
+			if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE)
+				continue;
+			if (Math.abs(size.height - targetHeight) < minDiff) {
+				optimalSize = size;
+				minDiff = Math.abs(size.height - targetHeight);
+			}
+		}
+		if (optimalSize == null) {
+			minDiff = Double.MAX_VALUE;
+			for (Size size : sizes) {
+				if (Math.abs(size.height - targetHeight) < minDiff) {
+					optimalSize = size;
+					minDiff = Math.abs(size.height - targetHeight);
+				}
+			}
+		}
+		return optimalSize;
 	}
 
 	public Camera openCamera_BackOrFront(int cameraType) {
@@ -229,22 +243,27 @@ public class Surface_Picture_Preview extends SurfaceView implements
 	private void setCameraParameters(Parameters params) {
 		try {
 			mCameraParameters.setCameraType(whichCamera);
-			//mCameraParameters.setAntiBanding(params.getSupportedAntibanding());
-			if(Build.MODEL.equals("SHW-M250S") == false) {
-				mCameraParameters.setColorEffect(params.getSupportedColorEffects());
+			// mCameraParameters.setAntiBanding(params.getSupportedAntibanding());
+			if (Build.MODEL.equals("SHW-M250S") == false) {
+				mCameraParameters.setColorEffect(params
+						.getSupportedColorEffects());
 				mCameraParameters.setSceneMode(params.getSupportedSceneModes());
 			}
-			//mCameraParameters.setFileFormat(params.getSupportedPictureFormats());
-			if(whichCamera == CAMERA_BACK) {
+			// mCameraParameters.setFileFormat(params.getSupportedPictureFormats());
+			if (whichCamera == CAMERA_BACK) {
 				mCameraParameters.setFlashMode(params.getSupportedFlashModes());
-				mCameraParameters.setColorEffect(params.getSupportedColorEffects());
+				mCameraParameters.setColorEffect(params
+						.getSupportedColorEffects());
 			}
 			mCameraParameters.setFocusMode(params.getSupportedFocusModes());
-			//mCameraParameters.setJpegThumbnailSizes(params.getSupportedJpegThumbnailSizes());
-			mCameraParameters.setPictureSizes(params.getSupportedPictureSizes());
-			mCameraParameters.setWhiteBalance(params.getSupportedWhiteBalance());
+			// mCameraParameters.setJpegThumbnailSizes(params.getSupportedJpegThumbnailSizes());
+			mCameraParameters
+					.setPictureSizes(params.getSupportedPictureSizes());
+			mCameraParameters
+					.setWhiteBalance(params.getSupportedWhiteBalance());
 		} catch (Exception e) {
-			Log.e("smardi.Cliq", "ERROR in setCameraParameters:"+e.getLocalizedMessage());
+			Log.e("smardi.Cliq",
+					"ERROR in setCameraParameters:" + e.getLocalizedMessage());
 		}
 	}
 

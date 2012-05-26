@@ -175,7 +175,7 @@ public class AC_Main extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.ac_main);
-
+		
 		// Camera type setting
 		mCameraPref = new Manage_Camera_SharedPreference(AC_Main.this);
 		mCameraPref.setWhichCamera(whichCamera);
@@ -220,13 +220,37 @@ public class AC_Main extends Activity {
 		oel.disable();
 		
 		isRestart = true;
+		
+		Log.e(TAG, "onPause");
 	}
 
+	@Override
+	protected void onStop() {
+		super.onStop();
+		Log.e(TAG, "onStop");
+	}
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		
+		Log.e(TAG, "onStart");
+	}
+	
+	@Override
+	protected void onRestart() {
+		super.onRestart();
+		
+		Log.e(TAG, "onRestart");
+	}
+	
 	// =======================================================
 	@Override
 	protected void onResume() {
 		super.onResume();
 
+		Log.e(TAG, "onResume");
+		
 		isFocusing = false;
 
 		if (isCliqSoundShutterON == true) {
@@ -1200,7 +1224,9 @@ public class AC_Main extends Activity {
 
 			// SurfaceView 갱신이 끝났을 때.
 			else if (action.equals(mSurface.ACTION_SURFACE_CHANGED)) {
-				initCameraBySharedPreference();
+				if(mSurface.isLoadCameraparameterSuccese == true) {
+					initCameraBySharedPreference();
+				}
 			}
 		}
 	};
