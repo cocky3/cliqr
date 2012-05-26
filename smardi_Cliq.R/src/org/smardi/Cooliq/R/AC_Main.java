@@ -163,19 +163,16 @@ public class AC_Main extends Activity {
 
 	// 튜토리얼이 떠있는지 확인
 	private boolean isTutorialShow = true; // 처음에는 튜토리얼이 나타나있음.
-	
-	//사진의 방향을 알아내기 위한 리스너
+
+	// 사진의 방향을 알아내기 위한 리스너
 	private OrientationEventListener oel = null;
 	private int mAngle = 0;
-	
-	
-	
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.ac_main);
-		
+
 		// Camera type setting
 		mCameraPref = new Manage_Camera_SharedPreference(AC_Main.this);
 		mCameraPref.setWhichCamera(whichCamera);
@@ -195,9 +192,8 @@ public class AC_Main extends Activity {
 		Intent service = new Intent(AC_Main.this, Service_Cliq.class);
 		startService(service);
 
-		
-		//튜토리얼 나타내기
-		if(getIntent().getBooleanExtra("tutorial", false) == false) {
+		// 튜토리얼 나타내기
+		if (getIntent().getBooleanExtra("tutorial", false) == false) {
 			tutorial.setVisibility(View.GONE);
 		}
 		/*
@@ -211,16 +207,17 @@ public class AC_Main extends Activity {
 
 	// =======================================================
 	private boolean isRestart = false;
+
 	@Override
 	protected void onPause() {
 		super.onPause();
 		sendBroadcast(new Intent().setAction(Service_Cliq.ACTION_CLIQ_STOP));
-		
+
 		unregisterReceiver(mBroadcastReceiver);
 		oel.disable();
-		
+
 		isRestart = true;
-		
+
 		Log.e(TAG, "onPause");
 	}
 
@@ -229,39 +226,38 @@ public class AC_Main extends Activity {
 		super.onStop();
 		Log.e(TAG, "onStop");
 	}
-	
+
 	@Override
 	protected void onStart() {
 		super.onStart();
-		
+
 		Log.e(TAG, "onStart");
 	}
-	
+
 	@Override
 	protected void onRestart() {
 		super.onRestart();
-		
+
 		Log.e(TAG, "onRestart");
 	}
-	
+
 	// =======================================================
 	@Override
 	protected void onResume() {
 		super.onResume();
 
 		Log.e(TAG, "onResume");
-		
+
 		isFocusing = false;
 
 		if (isCliqSoundShutterON == true) {
 			sendBroadcast(new Intent()
 					.setAction(Service_Cliq.ACTION_CLIQ_START));
 		}
-		
+
 		registBroadcastReceiver();
 
-		oel = new OrientationEventListener(
-				AC_Main.this) {
+		oel = new OrientationEventListener(AC_Main.this) {
 
 			@Override
 			public void onOrientationChanged(int orientation) {
@@ -269,16 +265,16 @@ public class AC_Main extends Activity {
 				mAngle = orientation;
 			}
 		};
-		
-		if(isRestart == true) {
+
+		if (isRestart == true) {
 			finish();
 			startActivity(new Intent(this, AC_Main.class));
 		}
 
-		//oel.enable();
+		// oel.enable();
 	}
-	
-	//=========================================================
+
+	// =========================================================
 
 	@Override
 	protected void onDestroy() {
@@ -290,114 +286,129 @@ public class AC_Main extends Activity {
 		Intent service = new Intent(AC_Main.this, Service_Cliq.class);
 		stopService(service);
 
-				isRunThread = false;
+		isRunThread = false;
 		mThread = null;
 
 		super.onDestroy();
 	}
-	
 
 	// =======================================================
 	private void initCameraBySharedPreference() {
-		//셔터를 원래대로
+		// 셔터를 원래대로
 		btn_shutter.setImageDrawable(getResources().getDrawable(
 				R.drawable.c_shutter));
-		Parameters params = mSurface.mCamera.getParameters();
-			
 
-		// 플래시 모드가 같은지 확인, 없으면 처음 것 적용
-		
 		try {
-			if (mCameraParametes.getFlashMode() == null) {
+			Parameters params = mSurface.mCamera.getParameters();
+
+			// 플래시 모드가 같은지 확인, 없으면 처음 것 적용
+
+			try {
+				if (mCameraParametes.getFlashMode() == null) {
+					mCameraPref.setFlashMode("off");
+				}
+
+				if (mCameraParametes.getFlashMode().indexOf(
+						mCameraPref.getFlashMode()) < 0) {
+					if (whichCamera == mSurface.CAMERA_FACE) {
+						mCameraPref.setFlashMode(mCameraParametes
+								.getFlashMode().get(0));
+					} else {
+						mCameraPref.setFlashMode("auto");
+					}
+				}
+			} catch (Exception e) {
+				/*
+				 * Log.e(TAG, "mCameraParametes.getFlashMode() == null:"+
+				 * (mCameraParametes.getFlashMode() == null)); Log.e(TAG,
+				 * "mCameraParametes.getFlashMode().size():"
+				 * +mCameraParametes.getFlashMode().size());
+				 * 
+				 * for(int i=0; i<mCameraParametes.getFlashMode().size(); i++) {
+				 * Log.e(TAG,
+				 * "mCameraParametes.getFlashMode().get("+i+"):"+mCameraParametes
+				 * .getFlashMode().get(i)); }
+				 * 
+				 * Log.e(TAG,
+				 * "mCameraPref.setFlashMode():"+mCameraPref.getFlashMode());
+				 */
+				Log.e(TAG, "mCameraParametes.getFlashMode()");
+				Log.e(TAG, "mCameraPref == null :" + (mCameraPref == null));
+				Log.e(TAG, "mCameraPref.getFlashMode() == null :"
+						+ (mCameraPref.getFlashMode() == null));
+				Log.e(TAG, "Error:" + e.getLocalizedMessage());
+
+				return;
+			}
+
+			try {
+				// 초점 모드가 있는지 확인, 없으면 처음 것 적용
+				if (mCameraParametes.getFocusMode().indexOf(
+						mCameraPref.getFocusMode()) < 0) {
+					mCameraPref.setFocusMode(mCameraParametes.getFocusMode()
+							.get(0));
+				}
+			} catch (Exception e) {
+				if (whichCamera == mSurface.CAMERA_FACE) {
+					mCameraPref.setFocusMode("off");
+					Log.e(TAG, "mCameraPref.setFocusMode(\"off\");");
+				} else {
+					mCameraPref.setFocusMode("auto");
+					Log.e(TAG, "mCameraPref.setFocusMode(\"auto\");");
+				}
+
+				Log.e(TAG, "Error:" + e.getLocalizedMessage());
+				return;
+			}
+
+			// 사진 크기가 있는지 확인, 없으면 처음 것 적용
+			/*
+			 * if(whichCamera == mSurface.CAMERA_BACK) {
+			 * mCameraPref.setPictureSizes
+			 * (mCameraPref.getPictureSizes_BACK()[0],
+			 * mCameraPref.getPictureSizes_BACK()[1]); } else {
+			 * mCameraPref.setPictureSizes
+			 * (mCameraPref.getPictureSizes_FRONT()[0],
+			 * mCameraPref.getPictureSizes_FRONT()[1]); }
+			 */
+
+			if (whichCamera == mSurface.CAMERA_BACK) {
+				mCameraPref.setFocusMode("auto");
+				mCameraPref.setFlashMode("auto");
+				// isSetCameraParameters = true;
+			} else {
+				mCameraPref.setFocusMode("infinity");
 				mCameraPref.setFlashMode("off");
 			}
-		
-			if (mCameraParametes.getFlashMode().indexOf(mCameraPref.getFlashMode()) < 0) {
-				if (whichCamera == mSurface.CAMERA_FACE) {
-					mCameraPref
-							.setFlashMode(mCameraParametes.getFlashMode().get(0));
-				} else {
-					mCameraPref.setFlashMode("auto");
-				}
+
+			if (whichCamera == mSurface.CAMERA_BACK) {
+				params.setFlashMode(mCameraPref.getFlashMode());
+				params.setFocusMode(mCameraPref.getFocusMode());
 			}
-		} catch (Exception e) {
-			/*
-			Log.e(TAG, "mCameraParametes.getFlashMode() == null:"+ (mCameraParametes.getFlashMode() == null));
-			Log.e(TAG, "mCameraParametes.getFlashMode().size():"+mCameraParametes.getFlashMode().size());
-			
-			for(int i=0; i<mCameraParametes.getFlashMode().size(); i++) {
-				Log.e(TAG, "mCameraParametes.getFlashMode().get("+i+"):"+mCameraParametes.getFlashMode().get(i));
-			}
-			
-			Log.e(TAG, "mCameraPref.setFlashMode():"+mCameraPref.getFlashMode());*/
-			Log.e(TAG, "mCameraParametes.getFlashMode()");
-			Log.e(TAG, "mCameraPref == null :" + (mCameraPref == null));
-			Log.e(TAG, "mCameraPref.getFlashMode() == null :" + (mCameraPref.getFlashMode() == null));
-			Log.e(TAG, "Error:" + e.getLocalizedMessage());
-			
-			return;
-		}
-		
-		try {
-			// 초점 모드가 있는지 확인, 없으면 처음 것 적용
-			if (mCameraParametes.getFocusMode().indexOf(mCameraPref.getFocusMode()) < 0) {
-				mCameraPref.setFocusMode(mCameraParametes.getFocusMode().get(0));
-			}
-		} catch (Exception e) {
-			if(whichCamera == mSurface.CAMERA_FACE) {
-				mCameraPref.setFocusMode("off");
-				Log.e(TAG, "mCameraPref.setFocusMode(\"off\");");
+			params.setColorEffect(mCameraPref.getColorEffect());
+			params.setSceneMode(mCameraPref.getSceneMode());
+			params.setJpegQuality(100);
+			params.setWhiteBalance(mCameraPref.getWhiteBalance());
+			int[] pictureSize = new int[2];
+			if (whichCamera == mSurface.CAMERA_BACK) {
+				pictureSize = mCameraPref.getPictureSizes_BACK();
 			} else {
-				mCameraPref.setFocusMode("auto");
-				Log.e(TAG, "mCameraPref.setFocusMode(\"auto\");");
+				pictureSize = mCameraPref.getPictureSizes_FRONT();
 			}
-			
-			
-			Log.e(TAG, "Error:" + e.getLocalizedMessage());
-			return;
-		}
 
-		// 사진 크기가 있는지 확인, 없으면 처음 것 적용
-		/*
-		 * if(whichCamera == mSurface.CAMERA_BACK) {
-		 * mCameraPref.setPictureSizes(mCameraPref.getPictureSizes_BACK()[0],
-		 * mCameraPref.getPictureSizes_BACK()[1]); } else {
-		 * mCameraPref.setPictureSizes(mCameraPref.getPictureSizes_FRONT()[0],
-		 * mCameraPref.getPictureSizes_FRONT()[1]); }
-		 */
+			params.setPictureSize(pictureSize[0], pictureSize[1]);
+			if (D) {
+				Log.i("smardi.Cliq", whichCamera + " width:" + pictureSize[0]
+						+ " height:" + pictureSize[1]);
+			}
+			mSurface.mCamera.setParameters(params);
 
-		if (whichCamera == mSurface.CAMERA_BACK) {
-			mCameraPref.setFocusMode("auto");
-			mCameraPref.setFlashMode("auto");
-			// isSetCameraParameters = true;
-		} else {
-			mCameraPref.setFocusMode("infinity");
-			mCameraPref.setFlashMode("off");
+			changePreviewRatio();
+		} catch (Exception e) {
+			Log.e(TAG, "Error in initCameraBySharedPreference");
+			Log.v(TAG, "Error in initCameraBySharedPreference");
+			Log.i(TAG, "Error in initCameraBySharedPreference");
 		}
-
-		if (whichCamera == mSurface.CAMERA_BACK) {
-			params.setFlashMode(mCameraPref.getFlashMode());
-			params.setFocusMode(mCameraPref.getFocusMode());
-		}
-		params.setColorEffect(mCameraPref.getColorEffect());
-		params.setSceneMode(mCameraPref.getSceneMode());
-		params.setJpegQuality(100);
-		params.setWhiteBalance(mCameraPref.getWhiteBalance());
-		int[] pictureSize = new int[2];
-		if (whichCamera == mSurface.CAMERA_BACK) {
-			pictureSize = mCameraPref.getPictureSizes_BACK();
-		} else {
-			pictureSize = mCameraPref.getPictureSizes_FRONT();
-		}
-
-		params.setPictureSize(pictureSize[0], pictureSize[1]);
-		if (D) {
-			Log.i("smardi.Cliq", whichCamera + " width:" + pictureSize[0]
-					+ " height:" + pictureSize[1]);
-		}
-		mSurface.mCamera.setParameters(params);
-
-		changePreviewRatio();
 	}
 
 	// 효과음들을 불러온다.
@@ -775,37 +786,40 @@ public class AC_Main extends Activity {
 
 			// whiteScreen.setVisibility(View.VISIBLE);
 			try {
-				//방향에 맞게 이미지 회전하기
-				//Bitmap tempBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-				
-				//tempBitmap = tempBitmap.createBitmap(tempBitmap, 0, 0, tempBitmap.getWidth(), tempBitmap.getHeight(), mat, true);
-				
+				// 방향에 맞게 이미지 회전하기
+				// Bitmap tempBitmap = BitmapFactory.decodeByteArray(data, 0,
+				// data.length);
+
+				// tempBitmap = tempBitmap.createBitmap(tempBitmap, 0, 0,
+				// tempBitmap.getWidth(), tempBitmap.getHeight(), mat, true);
+
 				FileOutputStream fos = new FileOutputStream(file);
-				//tempBitmap.compress(CompressFormat.JPEG, 100, fos);
-				
+				// tempBitmap.compress(CompressFormat.JPEG, 100, fos);
+
 				fos.write(data);
 				fos.flush();
 				fos.close();
-				
+
 				// 찍은 날짜 수정
 				ExifInterface mExif = new ExifInterface(getPhotoFilename());
 				mExif.setAttribute(ExifInterface.TAG_DATETIME,
 						new Date(System.currentTimeMillis()).toString());
-				/*if((0 <= mAngle && 60 < mAngle) || (300 <= mAngle && 360 < mAngle)) {
-					// 90도 회전
-					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""+ExifInterface.ORIENTATION_ROTATE_90);
-				} else if(60 <= mAngle && mAngle < 120) {
-					// 180도 회전
-					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""+ExifInterface.ORIENTATION_ROTATE_180);
-				} else if(120 <= mAngle && mAngle < 240) {
-					// 270도 회전
-					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""+ExifInterface.ORIENTATION_ROTATE_270);
-				} else if(240 <= mAngle && mAngle < 300) {
-					// 그대로
-					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""+ExifInterface.ORIENTATION_NORMAL);
-				}*/
+				/*
+				 * if((0 <= mAngle && 60 < mAngle) || (300 <= mAngle && 360 <
+				 * mAngle)) { // 90도 회전
+				 * mExif.setAttribute(ExifInterface.TAG_ORIENTATION,
+				 * ""+ExifInterface.ORIENTATION_ROTATE_90); } else if(60 <=
+				 * mAngle && mAngle < 120) { // 180도 회전
+				 * mExif.setAttribute(ExifInterface.TAG_ORIENTATION,
+				 * ""+ExifInterface.ORIENTATION_ROTATE_180); } else if(120 <=
+				 * mAngle && mAngle < 240) { // 270도 회전
+				 * mExif.setAttribute(ExifInterface.TAG_ORIENTATION,
+				 * ""+ExifInterface.ORIENTATION_ROTATE_270); } else if(240 <=
+				 * mAngle && mAngle < 300) { // 그대로
+				 * mExif.setAttribute(ExifInterface.TAG_ORIENTATION,
+				 * ""+ExifInterface.ORIENTATION_NORMAL); }
+				 */
 				mExif.saveAttributes();
-
 
 				BitmapFactory.Options options = new BitmapFactory.Options();
 				options.inSampleSize = 8;
@@ -813,8 +827,7 @@ public class AC_Main extends Activity {
 						data.length, options);
 				updateThumbnail(tempBmp);
 				tempBmp = null;
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 				Toast.makeText(AC_Main.this,
 						"Error occured while Saving the picture", 1000).show();
 				Log.e(TAG,
@@ -1178,7 +1191,6 @@ public class AC_Main extends Activity {
 
 	}
 
-
 	BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
 
 		@Override
@@ -1224,7 +1236,7 @@ public class AC_Main extends Activity {
 
 			// SurfaceView 갱신이 끝났을 때.
 			else if (action.equals(mSurface.ACTION_SURFACE_CHANGED)) {
-				if(mSurface.isLoadCameraparameterSuccese == true) {
+				if (mSurface.isLoadCameraparameterSuccese == true) {
 					initCameraBySharedPreference();
 				}
 			}
@@ -1381,9 +1393,11 @@ public class AC_Main extends Activity {
 			stateCamera = STATE_CAMERA_READY;
 			autoFocus();
 			isFocusedByCliq = true;
-			
-			/*Log.e(TAG, "commanded takePicture(), but camera is not ready:"
-					+ stateCamera);*/
+
+			/*
+			 * Log.e(TAG, "commanded takePicture(), but camera is not ready:" +
+			 * stateCamera);
+			 */
 		}
 	}
 
@@ -1550,7 +1564,7 @@ public class AC_Main extends Activity {
 				break;
 			case WHAT_CLEAN_SCREEN:
 				whiteScreen.setVisibility(View.GONE);
-				//셔터 원래대로
+				// 셔터 원래대로
 				btn_shutter.setImageDrawable(getResources().getDrawable(
 						R.drawable.c_shutter));
 				break;
@@ -1593,7 +1607,7 @@ public class AC_Main extends Activity {
 
 				if (mSurface.isSetCameraParameters == true
 						&& isSetCameraParameters == false) {
-					if(mCameraParametes == null) {
+					if (mCameraParametes == null) {
 						mCameraParametes = mSurface.mCameraParameters;
 					}
 					// initCameraBySharedPreference(); //카메라 설정을 초기화한다.
