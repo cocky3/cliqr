@@ -221,26 +221,6 @@ public class AC_Main extends Activity {
 		Log.e(TAG, "onPause");
 	}
 
-	@Override
-	protected void onStop() {
-		super.onStop();
-		Log.e(TAG, "onStop");
-	}
-
-	@Override
-	protected void onStart() {
-		super.onStart();
-
-		Log.e(TAG, "onStart");
-	}
-
-	@Override
-	protected void onRestart() {
-		super.onRestart();
-
-		Log.e(TAG, "onRestart");
-	}
-
 	// =======================================================
 	@Override
 	protected void onResume() {
@@ -257,6 +237,11 @@ public class AC_Main extends Activity {
 
 		registBroadcastReceiver();
 
+		if(isRestart == true) {
+			tutorial.setVisibility(View.GONE);
+			isRestart = false;
+		}
+		
 		oel = new OrientationEventListener(AC_Main.this) {
 
 			@Override
@@ -265,11 +250,10 @@ public class AC_Main extends Activity {
 				mAngle = orientation;
 			}
 		};
-
-		if (isRestart == true) {
-			finish();
-			startActivity(new Intent(this, AC_Main.class));
-		}
+		/*
+		 * if (isRestart == true) { finish(); startActivity(new Intent(this,
+		 * AC_Main.class)); }
+		 */
 
 		// oel.enable();
 	}
@@ -404,10 +388,11 @@ public class AC_Main extends Activity {
 			mSurface.mCamera.setParameters(params);
 
 			changePreviewRatio();
+
 		} catch (Exception e) {
-			Log.e(TAG, "Error in initCameraBySharedPreference");
-			Log.v(TAG, "Error in initCameraBySharedPreference");
-			Log.i(TAG, "Error in initCameraBySharedPreference");
+			Log.e(TAG, "Error in initCameraBySharedPreference:" + e.getLocalizedMessage());
+			Log.v(TAG, "Error in initCameraBySharedPreference:" + e.getLocalizedMessage());
+			Log.i(TAG, "Error in initCameraBySharedPreference:" + e.getLocalizedMessage());
 		}
 	}
 
@@ -936,7 +921,6 @@ public class AC_Main extends Activity {
 		}
 
 		btn_change_camera.setImageDrawable(drawable);
-		// initCameraBySharedPreference();
 		mSurface.openCamera_BackOrFront(whichCamera);
 
 		// Surface view 화면을 변화시켜서 화면 비율을 정상화하기 위한 부분----------------------
@@ -1323,7 +1307,6 @@ public class AC_Main extends Activity {
 		}
 
 		if (isSetCameraParameters == false) {
-			// initCameraBySharedPreference();
 			isSetCameraParameters = true;
 		}
 
@@ -1610,7 +1593,7 @@ public class AC_Main extends Activity {
 					if (mCameraParametes == null) {
 						mCameraParametes = mSurface.mCameraParameters;
 					}
-					// initCameraBySharedPreference(); //카메라 설정을 초기화한다.
+
 					isSetCameraParameters = true;
 					if (D) {
 						Log.e(TAG, "We read cameraparameters complete!");

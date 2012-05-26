@@ -12,15 +12,16 @@ import android.view.*;
 
 public class Surface_Picture_Preview extends SurfaceView implements
 		SurfaceHolder.Callback {
-	private boolean D = false;
+	private boolean D = true;
 
 	SurfaceHolder mHolder;
 	Camera mCamera = null;
 	Context mContext = null;
 	public CameraParameters mCameraParameters;
 	public boolean isSetCameraParameters = false;
-	
-	public boolean isLoadCameraparameterSuccese = false;	//surfacechanged에서 제대로 불러왔는지
+
+	public boolean isLoadCameraparameterSuccese = false; // surfacechanged에서 제대로
+															// 불러왔는지
 
 	// Camera preference
 	Manage_Camera_SharedPreference mCameraPref;
@@ -30,6 +31,12 @@ public class Surface_Picture_Preview extends SurfaceView implements
 	private int whichCamera = 0;
 
 	public String ACTION_SURFACE_CHANGED = "org.smardi.Cliq.r.surfacechange";
+
+	Camera.Parameters params = null;
+	Camera.Parameters temp_params = null;
+	
+	static int lastCamera = -1;	//이전에 설정되있던 카메라 종류를 알아내기 위함
+	
 
 	public Surface_Picture_Preview(Context context, AttributeSet attr) {
 		super(context, attr);
@@ -51,81 +58,78 @@ public class Surface_Picture_Preview extends SurfaceView implements
 
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
-		// Surface가 생성되었다면, 카메라의 인스턴스를 받아온 후 카메라의
-		// Preview 를 표시할 위치를 설정합니다.
-		/*
-		 * mCamera = Camera.open(mCameraPref.getWhichCamera()); //mCamera =
-		 * openFrontFacingCameraGingerbread(CAMERA_BACK); try {
-		 * mCamera.setPreviewDisplay(holder); } catch (IOException exception) {
-		 * mCamera.release(); mCamera = null; // TODO: add more 3exception
-		 * handling logic here }
-		 */
-
 		openCamera_BackOrFront(mCameraPref.getWhichCamera());
 	}
 
 	public void resumePreview() {
 		mCamera.startPreview();
-		Log.e("smardi.Cliq", "params:" + mCamera.getParameters());
 		setCameraParameters(mCamera.getParameters());
 	}
 
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,
 			int height) {
+
 		try {
-			// 표면의 크기가 결정될 때 최적의 미리보기 크기를 구해 설정한다.
-			Camera.Parameters params = mCamera.getParameters();
+		// 표면의 크기가 결정될 때 최적의 미리보기 크기를 구해 설정한다.
+		if (params == null && temp_params == null) {
+			params = mCamera.getParameters();
+			temp_params = mCamera.getParameters();
+		} else if (params == null) {
+			params = temp_params;
+		}
 
-			List<Size> arSize = params.getSupportedPreviewSizes();
-			if (true) {
-				for (Size size : arSize) {
-					/*Log.i("smardi.Cliq", "preview:" + size.width + " x "
-							+ size.height);*/
+		List<Size> arSize = params.getSupportedPreviewSizes();
+		/*if (false) {
+			for (Size size : arSize) {
+				Log.i("smardi.Cliq", "preview:" + size.width + " x "
+						+ size.height);
+			}
+		}*/
+
+		if (arSize == null) {
+			params.setPreviewSize(width, height);
+		} else {
+			int diff = 10000;
+			Size opti = null;
+			for (Size s : arSize) {
+				if (Math.abs(s.height - height) < diff) {
+					diff = Math.abs(s.height - height);
+					opti = s;
 				}
 			}
 
-			if (arSize == null) {
-				params.setPreviewSize(width, height);
-			} else {
-				int diff = 10000;
-				Size opti = null;
-				for (Size s : arSize) {
-					if (Math.abs(s.height - height) < diff) {
-						diff = Math.abs(s.height - height);
-						opti = s;
-					}
-				}
+			// getOptimalPreviewSize 함수를 이용해서 최적 사이즈를 구함
+			// opti = getOptimalPreviewSize(arSize, width, height);
 
-				// getOptimalPreviewSize 함수를 이용해서 최적 사이즈를 구함
-				// opti = getOptimalPreviewSize(arSize, width, height);
+			params.setPreviewSize(opti.width, opti.height);
 
-				params.setPreviewSize(opti.width, opti.height);
+			// -----------------------------------------------------------------
+			// params.setPreviewSize(width, height);
 
-				// -----------------------------------------------------------------
-				// params.setPreviewSize(width, height);
+			// -----------------------------------------------------------------
 
-				// -----------------------------------------------------------------
-
-				if (D) {
-					Log.e("smardi.Cliq", "opti.w:" + opti.width + " opti.h:"
-							+ opti.height);
-				}
+			if (D) {
+				Log.e("smardi.Cliq", "opti.w:" + opti.width + " opti.h:"
+						+ opti.height);
 			}
-			mCamera.setParameters(params);
-			mCamera.startPreview();
+		}
+		mCamera.setParameters(params);
+		mCamera.startPreview();
 
-			setCameraParameters(params);
-			isSetCameraParameters = true;
+		setCameraParameters(params);
+		isSetCameraParameters = true;
 
-			isLoadCameraparameterSuccese = true;
-			
-			// 화면이 갱신된 것을 방송으로 전달
-			mContext.sendBroadcast(new Intent()
-					.setAction(ACTION_SURFACE_CHANGED));
+		isLoadCameraparameterSuccese = true;
+
+		// 화면이 갱신된 것을 방송으로 전달
+		mContext.sendBroadcast(new Intent().setAction(ACTION_SURFACE_CHANGED));
 		} catch (Exception e) {
-			Log.e("Cliq", "Error in SurfaceChange");
 			isLoadCameraparameterSuccese = false;
+			
+			Log.e("Cliq.r", "Error in surfaceChanged:"+e.getLocalizedMessage());
+			Log.v("Cliq.r", "Error in surfaceChanged:"+e.getLocalizedMessage());
+			Log.i("Cliq.r", "Error in surfaceChanged:"+e.getLocalizedMessage());
 		}
 	}
 
@@ -162,7 +166,7 @@ public class Surface_Picture_Preview extends SurfaceView implements
 	public Camera openCamera_BackOrFront(int cameraType) {
 		whichCamera = cameraType;
 		int cameraCount = 0;
-		Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+		CameraInfo cameraInfo = new CameraInfo();
 		cameraCount = Camera.getNumberOfCameras();
 		// Log.e("Cliq.R", "cameraCount:"+cameraCount);
 		for (int camIdx = 0; camIdx < cameraCount; camIdx++) {
@@ -170,7 +174,8 @@ public class Surface_Picture_Preview extends SurfaceView implements
 
 			switch (cameraType) {
 			case CAMERA_BACK:
-				if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+				if (cameraInfo.facing == CameraInfo.CAMERA_FACING_BACK) {
+					lastCamera = cameraInfo.facing;
 					try {
 						if (mCamera != null) {
 							mCamera.stopPreview();
@@ -184,7 +189,6 @@ public class Surface_Picture_Preview extends SurfaceView implements
 						} catch (IOException exception) {
 							mCamera.release();
 							mCamera = null;
-							// TODO: add more exception handling logic here
 						}
 						resumePreview();
 					} catch (RuntimeException e) {
@@ -196,6 +200,7 @@ public class Surface_Picture_Preview extends SurfaceView implements
 				break;
 			case CAMERA_FACE:
 				if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+					lastCamera = cameraInfo.facing;
 					try {
 						if (mCamera != null) {
 							mCamera.stopPreview();
@@ -209,7 +214,6 @@ public class Surface_Picture_Preview extends SurfaceView implements
 						} catch (IOException exception) {
 							mCamera.release();
 							mCamera = null;
-							// TODO: add more exception handling logic here
 						}
 						resumePreview();
 					} catch (RuntimeException e) {
@@ -244,11 +248,10 @@ public class Surface_Picture_Preview extends SurfaceView implements
 		try {
 			mCameraParameters.setCameraType(whichCamera);
 			// mCameraParameters.setAntiBanding(params.getSupportedAntibanding());
-			if (Build.MODEL.equals("SHW-M250S") == false) {
-				mCameraParameters.setColorEffect(params
-						.getSupportedColorEffects());
-				mCameraParameters.setSceneMode(params.getSupportedSceneModes());
-			}
+			mCameraParameters.setColorEffect(params
+					.getSupportedColorEffects());
+			mCameraParameters.setSceneMode(params.getSupportedSceneModes());
+		
 			// mCameraParameters.setFileFormat(params.getSupportedPictureFormats());
 			if (whichCamera == CAMERA_BACK) {
 				mCameraParameters.setFlashMode(params.getSupportedFlashModes());
