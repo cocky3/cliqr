@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="language">en</string>
+    
     <string name="hello">Hello World, Main!</string>
     <string name="app_name">CLIQ.r</string>
-    <string name="dialog_regist_title">CLIQ.r 등록</string>
-    <string name="dialog_regist_content">3초 뒤에 초록색 동그라미가 보일 때마다 CLIQ.r의 스위치를 눌러 주세요.</string>
-    <string name="dialog_regist_content_done">성공적으로 클리커를 등록하였습니다!</string>
+    <string name="dialog_regist_title">CLIQ.r Registration</string>
+    <string name="dialog_regist_content">Please click the CLIQ.r button when green circle shows up</string>
+    <string name="dialog_regist_content_done">Successfully registered!</string>
     <string name="progressdialog_title" />
     <string name="progressdialog_msg">Calculating.. Please wait..</string>
     <string name="dialog_test_title">Connection with Cliq test</string>
-    <string name="dialog_test_content">클리커 버튼을 누르면 회색 원이 녹색으로 변하는지 확인 하십시오.\n만약 그렇지 않을 경우 클리커를 다시 등록해야 합니다.</string>
+    <string name="dialog_test_content">Please check grey circle turns into green circle when you click the CLIQ.r button\nIf not you should register CLIQ.r again</string>
     <string name="toast_error_clicker_not_regist">Please regist your Cliq.R</string>
     <string name="inline_preferences">In-line preferences</string>
     <string name="dialog_based_preferences">Dialog-based preferences</string>
@@ -34,23 +36,35 @@
     <string name="title_child_preference">Child toggle</string>
     <string name="summary_child_preference">This is visually a child</string>
     <string name="preferences_from_code">App/Preferences/5. Preferences from code</string>
-    <string name="dialog_regist_fail">CLIQ.r 등록에 실패했습니다.\n클리커 상태를 확인 해 주시고 다시 한번 시도 해 주시기 바랍니다.</string>
-    <string name="setting_title">어플리케이션 설정</string>
-    <string name="setting_category_1st_title">CLIQ.r 통신 설정</string>
-    <string name="setting_category_2nd_title">카메라 설정</string>
-    <string name="setting_registration_title">CLIQ.r 기기 등록</string>
-    <string name="setting_communication_test_title">CLIQ.r 통신 테스트</string>
-    <string name="setting_change_sensitivity_title">민감도 설정</string>
-    <string name="setting_registration_content">CLIQ.r의 신호를 등록합니다.</string>
-    <string name="setting_communication_test_content">CLIQ.r과의 연결을 테스트합니다.</string>
-    <string name="setting_change_sensitivity_content">CLIQ.r의 신호를 인식하는 민감도를 설정합니다.</string>
-    <string name="setting_scene_mode_title">장면 모드 설정</string>
-    <string name="setting_white_balance_title">화이트 벨런스</string>
-    <string name="setting_color_effect_title">색조 효과</string>
-    <string name="setting_rear_resolution_title">후면 카메라 해상도</string>
-    <string name="setting_front_resolution_title">전면 카메라 해상도</string>
-    <string name="backButtonToast">뒤로가기 버튼을 한번 더 누르면 종료합니다.</string>
-    <string name="alert_no_regist_cliq_title">CLIQ.r 등록이 필요합니다.</string>
-    <string name="alert_no_regist_cliq_message">CLIQ.r을 이용하여 촬영하시려면 CLIQ.r를 등록하셔야 합니다.\n[CLIQ.r 기기 등록]을 수행 해 주세요.</string>
+    
+    
+    <!-- ??? -->
+    <string name="dialog_regist_fail">Failed to enrol the CLIQ.r\nPlease check your CLIQ.r and try again</string>
+    <string name="setting_title">CLIQ.r Setting</string>
+    <string name="setting_category_1st_title">CLIQ.r category</string>
+    <string name="setting_category_2nd_title">Camera category</string>
+    <string name="setting_category_help">Help</string>
+    <string name="setting_registration_title">CLIQ.r registration</string>
+    <string name="setting_communication_test_title">CLIQ.r communication test</string>
+    <string name="setting_change_sensitivity_title">Change sensitivity</string>
+    <string name="setting_title_tutorial">Tutorial</string>
+    <string name="setting_content_tutorial">Review tutorial</string>
+    <string name="setting_registration_content">Regist the signal of CLIQ.r</string>
+    <string name="setting_communication_test_content">Test communication with CLIQ.r</string>
+    <string name="setting_change_sensitivity_content">Change the sensing sensitivity of the signal received from CLIQ.r</string>
+    <string name="setting_scene_mode_title">Scene mode</string>
+    <string name="setting_white_balance_title">Whitte balance</string>
+    <string name="setting_color_effect_title">Color effect</string>
+    <string name="setting_rear_resolution_title">Rear-facing camera resolution</string>
+    <string name="setting_front_resolution_title">Front-facing camera resolution</string>
+    <string name="backButtonToast">Press Back again to Exit</string>
+    <string name="alert_no_regist_cliq_title">Please register signal of CLIQ.r</string>
+    <string name="alert_no_regist_cliq_message">Please register the signal before taking pictures with CLIQ.r\nPlease run the [CLIQ.r registeration]</string>
 
+    <string name="dialog_tutorial_title">Exit tutorial</string>
+    <string name="dialog_tutorial_message">Want to finish the tutorial?</string>
+    
+    <string name="dialog_Delete">Delete</string>
+    <string name="dialog_OK">OK</string>
+    <string name="dialog_Cancel">Cancel</string>
 </resources>

@@ -14,12 +14,16 @@ public class AC_Loading extends Activity {
 	
 	private ImageView loadingIconLayout = null;
 	
+	Manage_Camera_SharedPreference mPref;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.ac_loading);
 		
 		getWindow().setFormat(PixelFormat.RGBA_8888);
+		
+		mPref = new Manage_Camera_SharedPreference(AC_Loading.this);
 		
 		loadingIconLayout = (ImageView)findViewById(R.id.loadingIcon);
 		
@@ -62,8 +66,17 @@ public class AC_Loading extends Activity {
 		
 		@Override
 		public void onFinish() {
-			Intent intent = new Intent(AC_Loading.this, AC_Main.class);
+			Intent intent;
+			
+			if(mPref.getCheckedTutorial() == true) {
+				//튜토리얼을 했을 경우
+				intent = new Intent(AC_Loading.this, AC_Main.class);
+			} else {
+				//튜토리얼을 안했을 경우
+				intent = new Intent(AC_Loading.this, AC_Help_tutorial.class);
+			}
 			intent.putExtra("tutorial", true);
+			intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 			startActivity(intent);
 			overridePendingTransition(R.anim.fadein, R.anim.fadeout);
 			cTimer.cancel();

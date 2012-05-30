@@ -5,7 +5,6 @@ import org.smardi.CliqService.*;
 import android.content.*;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.hardware.Camera.Size;
-import android.net.*;
 import android.os.*;
 import android.preference.*;
 import android.preference.Preference.OnPreferenceClickListener;
@@ -38,6 +37,8 @@ public class PA_Setting extends PreferenceActivity {
 	private final String KEY_CAMERA_COLOREFFECT = "org.smardi.cliq.coloreffect";
 	private final String KEY_CAMERA_PICTURESIZE_BACK = "org.smardi.cliq.picturesize.back";
 	private final String KEY_CAMERA_PICTURESIZE_FRONT = "org.smardi.cliq.picturesize.front";
+	
+	private final String KEY_TUTORIAL = "org.smardi.cliq.tutorial";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -125,7 +126,13 @@ public class PA_Setting extends PreferenceActivity {
 				}
 			}
 		}
-		list_Camera_SceneMode.setEntries(translatedSceneModeList);
+		
+		if(getString(R.string.language).equals("ko")== true) {
+			list_Camera_SceneMode.setEntries(translatedSceneModeList);
+		} else {
+			mCameraPref.getSceneModeList();
+		}
+		
 		list_Camera_SceneMode.setEntryValues(mCameraPref.getSceneModeList());
 		list_Camera_SceneMode
 				.setDialogTitle(getString(R.string.setting_scene_mode_title));
@@ -133,7 +140,10 @@ public class PA_Setting extends PreferenceActivity {
 				.setTitle(getString(R.string.setting_scene_mode_title));
 
 		String summarySceneMode = mCameraPref.getSceneMode();
-		summarySceneMode = translateSceneMode(summarySceneMode);
+		
+		if(getString(R.string.language).equals("ko")== true) {
+			summarySceneMode = translateSceneMode(summarySceneMode);
+		}
 
 		list_Camera_SceneMode.setSummary(summarySceneMode);
 		cameraPrefCat.addPreference(list_Camera_SceneMode);
@@ -157,7 +167,14 @@ public class PA_Setting extends PreferenceActivity {
 				}
 			}
 		}
-		list_Camera_WhiteBalance.setEntries(translatedWhiteBalanceList);
+		
+		if(getString(R.string.language).equals("ko")== true) {
+			list_Camera_WhiteBalance.setEntries(translatedWhiteBalanceList);
+		} else {
+			list_Camera_WhiteBalance.setEntries(mCameraPref
+					.getWhiteBalanceList());
+		}
+		
 		list_Camera_WhiteBalance.setEntryValues(mCameraPref
 				.getWhiteBalanceList());
 		list_Camera_WhiteBalance
@@ -166,7 +183,10 @@ public class PA_Setting extends PreferenceActivity {
 				.setTitle(getString(R.string.setting_white_balance_title));
 
 		String summaryWhiteBalance = mCameraPref.getWhiteBalance();
-		summaryWhiteBalance = translateWhiteBalance(summaryWhiteBalance);
+		
+		if(getString(R.string.language).equals("ko")== true) {
+			summaryWhiteBalance = translateWhiteBalance(summaryWhiteBalance);
+		}
 
 		list_Camera_WhiteBalance.setSummary(summaryWhiteBalance);
 		cameraPrefCat.addPreference(list_Camera_WhiteBalance);
@@ -190,7 +210,12 @@ public class PA_Setting extends PreferenceActivity {
 				}
 			}
 		}
-		list_Camera_ColorEffect.setEntries(translatedColorEffectList);
+		
+		if(getString(R.string.language).equals("ko")== true) {
+			list_Camera_ColorEffect.setEntries(translatedColorEffectList);
+		} else {
+			list_Camera_ColorEffect.setEntries(mCameraPref.getColorEffectList());
+		}
 		list_Camera_ColorEffect
 				.setEntryValues(mCameraPref.getColorEffectList());
 		list_Camera_ColorEffect
@@ -199,7 +224,9 @@ public class PA_Setting extends PreferenceActivity {
 				.setTitle(getString(R.string.setting_color_effect_title));
 
 		String summaryColorEffect = mCameraPref.getColorEffect();
-		summaryColorEffect = translateColorEffet(summaryColorEffect);
+		if(getString(R.string.language).equals("ko")== true) {
+			summaryColorEffect = translateColorEffet(summaryColorEffect);
+		}
 
 		list_Camera_ColorEffect.setSummary(summaryColorEffect);
 		cameraPrefCat.addPreference(list_Camera_ColorEffect);
@@ -237,6 +264,25 @@ public class PA_Setting extends PreferenceActivity {
 			list_Camera_PictureSize_FRONT.setSummary(currentFrontSize);
 			cameraPrefCat.addPreference(list_Camera_PictureSize_FRONT);
 		}
+		
+		
+		//---도움말
+		// Inline preferences
+		PreferenceCategory HelpCat = new PreferenceCategory(this);
+		HelpCat.setTitle(getString(R.string.setting_category_help));
+		root.addPreference(HelpCat);
+		
+		// CLIQ.r 주파수 등록 dialog 띄우기
+		Preference preference_Tutorial = new Preference(this);
+		preference_Tutorial.setKey(KEY_TUTORIAL);
+		preference_Tutorial
+				.setTitle(getString(R.string.setting_title_tutorial));
+		preference_Tutorial
+				.setSummary(getString(R.string.setting_content_tutorial));
+		preference_Tutorial
+				.setOnPreferenceClickListener(onPreferenceClickListener);
+		HelpCat.addPreference(preference_Tutorial);
+		
 		/*
 		 * // Edit text preference EditTextPreference editTextPref = new
 		 * EditTextPreference(this);
@@ -320,6 +366,8 @@ public class PA_Setting extends PreferenceActivity {
 						break;
 					}
 				}
+			} else if(key.equals(KEY_TUTORIAL)) {
+				startActivity(new Intent(PA_Setting.this, AC_Help_tutorial.class));
 			}
 			return false;
 		}

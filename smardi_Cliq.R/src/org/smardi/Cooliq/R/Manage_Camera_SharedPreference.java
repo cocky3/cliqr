@@ -356,4 +356,15 @@ public class Manage_Camera_SharedPreference {
 	public int getModeCLIQ() {
 		return mPref.getInt("CLIQ.r mode", 0);
 	}
+	
+	//튜토리얼을 확인했는지 저장
+	public void setCheckedTutorial(boolean checked) {
+		mEditor.putBoolean("checkedTutorial", checked);
+		mEditor.commit();
+	}
+	
+	//튜토리얼을 확인했는지 가져온다.
+	public boolean getCheckedTutorial() {
+		return mPref.getBoolean("checkedTutorial", false);
+	}
 }

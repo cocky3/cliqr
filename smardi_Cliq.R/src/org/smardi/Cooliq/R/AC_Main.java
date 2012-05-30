@@ -38,6 +38,9 @@ public class AC_Main extends Activity {
 
 	// 튜토리얼
 	private RelativeLayout tutorial;
+	private ImageView tutorial_left;
+	private ImageView tutorial_center;
+	private ImageView tutorial_right;
 
 	// 흰색 스크린
 	private LinearLayout whiteScreen;
@@ -181,6 +184,7 @@ public class AC_Main extends Activity {
 		eventRegist();
 		loadSoundFiles();
 		changeFont();
+		applyTutorialEnglish();
 
 		// 썸네일 새로고침
 		updateThumbnail();
@@ -203,6 +207,15 @@ public class AC_Main extends Activity {
 		 * intent.setAction(Service_Cliq.ACTION_MODE_CLIQING_ON);
 		 * sendBroadcast(intent);
 		 */
+	}
+
+	private void applyTutorialEnglish() {
+		if(getString(R.string.language).equals("en")== true) {
+			((ImageView)tutorial.getChildAt(0)).setImageDrawable(getResources().getDrawable(R.drawable.tutorial_left_en));
+			((ImageView)tutorial.getChildAt(1)).setImageDrawable(getResources().getDrawable(R.drawable.tutorial_center_en));
+			((ImageView)tutorial.getChildAt(2)).setImageDrawable(getResources().getDrawable(R.drawable.tutorial_right_en));
+			
+		}
 	}
 
 	// =======================================================
@@ -433,6 +446,7 @@ public class AC_Main extends Activity {
 
 		// 튜토리얼
 		tutorial = (RelativeLayout) findViewById(R.id.tutorial);
+		//tutorial_left = (ImageView)findViewById(R.id.tutorial_left);
 
 		// 흰색 이미지
 		whiteScreen = (LinearLayout) findViewById(R.id.whiteScreen);
@@ -1739,3 +1753,4 @@ public class AC_Main extends Activity {
 		}
 	}
 }
+

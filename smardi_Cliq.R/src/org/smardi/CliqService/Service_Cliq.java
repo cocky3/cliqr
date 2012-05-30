@@ -243,62 +243,72 @@ public class Service_Cliq extends Service {
 	}
 
 	private void startRecording() {
-		if(isRecordingRunning == false) {
+		if (isRecordingRunning == false) {
 			makeLog("startRecording");
-			//Log.e("Test", "startRecording inside");
-			audioReader.startReader(sampleRate, inputBlockSize * sampleDecimate,
+			// Log.e("Test", "startRecording inside");
+			audioReader.startReader(sampleRate,
+					inputBlockSize * sampleDecimate,
 					new AudioReader.Listener() {
 						@Override
 						public final void onReadComplete(short[] buffer) {
 							// receiveAudio(buffer);
 							processAudio(buffer);
-							
-							if(isRegistrating == false && isTesting == false) {
-								if(cliqMode == MODE_CLIQING) {
-									if(checkIsCliqingOccured() == true) {
-										
+
+							if (isRegistrating == false && isTesting == false) {
+								if (cliqMode == MODE_CLIQING) {
+									if (checkIsCliqingOccured() == true) {
+
 										count_cliq_occured = count_cliq_occured + 1;
-										
-										if(isTrigered == false && CRIT_CLIQ_OCCURED <= count_cliq_occured) {
+
+										if (isTrigered == false
+												&& CRIT_CLIQ_OCCURED <= count_cliq_occured) {
 											time_Pressed = new Date().getTime();
-											
+
 											Log.e("smardi.Cliq", "TRIGERD");
 											Intent intent = new Intent();
 											intent.setAction(ACTION_CLIQ_CLICK_TRIGERED);
 											sendBroadcast(intent);
 											isTrigered = true;
-										} else if(new Date().getTime() - time_Pressed < 200) {
+										} else if (new Date().getTime()
+												- time_Pressed < 200) {
 											time_Pressed = new Date().getTime();
 										}
 									} else {
-										
+
 										count_cliq_occured = 0;
-										
-										if(new Date().getTime() - time_Pressed >= 200) {
+
+										if (new Date().getTime() - time_Pressed >= 200) {
 											Intent intent = new Intent();
 											intent.setAction(ACTION_CLIQ_RELEASE_TRIGERED);
 											sendBroadcast(intent);
 											isTrigered = false;
 										}
 									}
-								} else if(cliqMode == MODE_AMPLITUDE) {
+								} else if (cliqMode == MODE_AMPLITUDE) {
 									detectBigSound();
 								}
-							} else if(isTesting == true) {
-								if(checkIsCliqingOccured() == true) {
-									if(isTrigered == false) {
+							} else if (isTesting == true) {
+								if (checkIsCliqingOccured() == true) {
+									
+									count_cliq_occured = count_cliq_occured + 1;
+									
+									if (isTrigered == false && CRIT_CLIQ_OCCURED <= count_cliq_occured) {
 										time_Pressed = new Date().getTime();
-										
+
 										Log.e("smardi.Cliq", "TEST TRIGERD");
 										Intent intent = new Intent();
 										intent.setAction(ACTION_CLIQ_TEST_CLICK_TRIGERED);
 										sendBroadcast(intent);
 										isTrigered = true;
-									} else if(new Date().getTime() - time_Pressed < 200) {
+									} else if (new Date().getTime()
+											- time_Pressed < 200) {
 										time_Pressed = new Date().getTime();
 									}
 								} else {
-									if(new Date().getTime() - time_Pressed >= 200) {
+									
+									count_cliq_occured = 0;
+									
+									if (new Date().getTime() - time_Pressed >= 200) {
 										Intent intent = new Intent();
 										intent.setAction(ACTION_CLIQ_TEST_RELEASE_TRIGERED);
 										sendBroadcast(intent);
@@ -307,7 +317,7 @@ public class Service_Cliq extends Service {
 								}
 							}
 						}
-	
+
 						@Override
 						public void onReadError(int error) {
 							handleError(error);
@@ -387,26 +397,27 @@ public class Service_Cliq extends Service {
 						* (1.05 + (double) cliqSensitivity / 100. / 2.));
 			}
 
-			/*
-			 * 클리커에서 신호가 들어왔다고 판단된 당시의 10000Hz 이상의 주파수를 csv 파일 형식으로 저장하기 위한 부분
-			 * String temp = ""; for(int i=0; i<spectrumData.length; i++) {
-			 * if(convertIndextToFrequency(i) > 10000) { temp +=
-			 * (convertIndextToFrequency(i)+","+ getDB(spectrumData[i]) +
-			 * "\r\n"); } }
-			 * 
-			 * String filename = new Date().getTime() + ".csv";
-			 * 
-			 * saveFrequency(getFilename(), temp);
-			 */
+			// 클리커에서 신호가 들어왔다고 판단된 당시의 10000Hz 이상의 주파수를 csv 파일 형식으로 저장하기 위한 부분
+			String temp = "";
+			for (int i = 0; i < spectrumData.length; i++) {
+				if (convertIndextToFrequency(i) > 10000) {
+					temp += (convertIndextToFrequency(i) + ","
+							+ getDB(spectrumData[i]) + "\r\n");
+				}
+			}
+
+			String filename = new Date().getTime() + ".csv";
+
+			saveFrequency(getFilename(), temp);
+
 			return true;
 		} else {
 			return false;
 		}
 	}
-	
-	
+
 	private void saveFrequency(String filename, String content) {
-		//String dirPath = getFilesDir().getAbsolutePath();
+		// String dirPath = getFilesDir().getAbsolutePath();
 		File file = new File(getFolder());
 
 		// 일치하는 폴더가 없으면 생성
@@ -422,9 +433,10 @@ public class Service_Cliq extends Service {
 			fos.write(testStr.getBytes());
 			fos.close();
 		} catch (IOException e) {
-			
+
 		}
 	}
+
 	private String getFilename() {
 		String filepath = Environment.getExternalStorageDirectory().getPath();
 		File file = new File(filepath, "FREQUENCY");
@@ -432,12 +444,14 @@ public class Service_Cliq extends Service {
 		if (!file.exists()) {
 			file.mkdirs();
 		}
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.KOREA);
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd_HHmmss",
+				Locale.KOREA);
 		Date currentTime = new Date();
-		return (file.getAbsolutePath() + "/" + formatter.format(currentTime) +".csv");
-		//return (file.getAbsolutePath() + "/temp_smardi" + AUDIO_RECORDER_FILE_EXT_WAV);
+		return (file.getAbsolutePath() + "/" + formatter.format(currentTime) + ".csv");
+		// return (file.getAbsolutePath() + "/temp_smardi" +
+		// AUDIO_RECORDER_FILE_EXT_WAV);
 	}
-	
+
 	private String getFolder() {
 		String filepath = Environment.getExternalStorageDirectory().getPath();
 		File file = new File(filepath, "FREQUENCY");
@@ -445,40 +459,40 @@ public class Service_Cliq extends Service {
 		if (!file.exists()) {
 			file.mkdirs();
 		}
-		
+
 		return (file.getAbsolutePath());
-		//return (file.getAbsolutePath() + "/temp_smardi" + AUDIO_RECORDER_FILE_EXT_WAV);
+		// return (file.getAbsolutePath() + "/temp_smardi" +
+		// AUDIO_RECORDER_FILE_EXT_WAV);
 	}
-	
 
 	private float getDB(float power) {
 		return (float) ((float) (Math.log10(power) / 6f + 1f) * 400.);
 	}
 
 	private float getCliqFrequencyPower() {
-		int LOW_FREQ = mSharedPreference.getCliqFrequency() - 400;
-		int HIGH_FREQ = mSharedPreference.getCliqFrequency() + 400;
+		int LOW_FREQ = mSharedPreference.getCliqFrequency() - 100;
+		int HIGH_FREQ = mSharedPreference.getCliqFrequency() + 100;
 
 		if (HIGH_FREQ > 22000) {
 			HIGH_FREQ = 22000;
 		}
-		
+
 		int LOW_INDEX = convertFrequencyToIndex(LOW_FREQ);
 		int HIGH_INDEX = convertFrequencyToIndex(HIGH_FREQ);
 
 		float max = 0;
 		int maxINDEX = 0;
 
-		if(LOW_INDEX < 0) {
+		if (LOW_INDEX < 0) {
 			LOW_INDEX = 0;
 		}
-		
-		if(HIGH_INDEX > spectrumData.length - 1) {
+
+		if (HIGH_INDEX > spectrumData.length - 1) {
 			HIGH_INDEX = spectrumData.length - 1;
-		} else if(HIGH_INDEX < 0) {
+		} else if (HIGH_INDEX < 0) {
 			HIGH_INDEX = 0;
 		}
-		
+
 		for (int i = LOW_INDEX; i <= HIGH_INDEX; i++) {
 			if (max < spectrumData[i]) {
 				max = spectrumData[i];
@@ -496,15 +510,15 @@ public class Service_Cliq extends Service {
 		int Freq = mSharedPreference.getCliqFrequency();
 
 		// 클리커 주파수에서 +-100 인 주파수는 제외하고 최대값을 구한다.
-		int leftFrequencyIndex = convertFrequencyToIndex(Freq - 600);
-		int rightFrequencyIndex = convertFrequencyToIndex(Freq + 600);
+		int leftFrequencyIndex = convertFrequencyToIndex(Freq - 300);
+		int rightFrequencyIndex = convertFrequencyToIndex(Freq + 300);
 
 		float tempMax = 0;
-		//int startFrequencyIndex = convertFrequencyToIndex(Freq - 1500);
-		//int endFrequencyIndex = convertFrequencyToIndex(Freq + 1500);
+		// int startFrequencyIndex = convertFrequencyToIndex(Freq - 1500);
+		// int endFrequencyIndex = convertFrequencyToIndex(Freq + 1500);
 		int startFrequencyIndex = convertFrequencyToIndex(14000);
 		int endFrequencyIndex = convertFrequencyToIndex(22000);
-		
+
 		int minFrequencyIndex = convertFrequencyToIndex(DETECTING_MIN_FREQ);
 		int maxFrequencyIndex = convertFrequencyToIndex(22000);
 		if (startFrequencyIndex < minFrequencyIndex) {
@@ -514,7 +528,7 @@ public class Service_Cliq extends Service {
 			endFrequencyIndex = maxFrequencyIndex;
 		}
 
-		//최대값을 구함.
+		// 최대값을 구함.
 		for (int i = startFrequencyIndex; i < endFrequencyIndex; i++) {
 			if (i < leftFrequencyIndex || rightFrequencyIndex < i) {
 				if (tempMax < spectrumData[i]) {
@@ -837,7 +851,7 @@ public class Service_Cliq extends Service {
 			return tempCliqFrequency;
 		}
 	};
-	
+
 	private int convertIndextToFrequency(Integer frequencyIndex) {
 		return (int) Math.round((double) (22050. / 512)
 				* (double) (frequencyIndex + 1));
@@ -980,11 +994,11 @@ public class Service_Cliq extends Service {
 		mMsg.obj = spectrumData;
 		mHandler.sendMessage(mMsg);
 
-		if(D) {
+		if (D) {
 			long time_newCalculated = new Date().getTime();
 			Log.i(TAG, "time calculating: "
-				+ (time_newCalculated - time_lastCalculated) + "ms");
-		
+					+ (time_newCalculated - time_lastCalculated) + "ms");
+
 			time_lastCalculated = time_newCalculated;
 		}
 	}
@@ -993,10 +1007,10 @@ public class Service_Cliq extends Service {
 
 	Thread mThreadCheckCliqState = new Thread(new Runnable() {
 		boolean isCliqON = false;
-		
+
 		public void run() {
 			while (isThreadCheckCliqState_running == true) {
-				
+
 				if (isCliqRunning == true && isCliqON == false) {
 					startRecording();
 					isCliqON = true;
