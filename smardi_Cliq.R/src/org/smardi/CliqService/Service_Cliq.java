@@ -470,11 +470,11 @@ public class Service_Cliq extends Service {
 	}
 
 	private float getCliqFrequencyPower() {
-		int LOW_FREQ = mSharedPreference.getCliqFrequency() - 100;
-		int HIGH_FREQ = mSharedPreference.getCliqFrequency() + 100;
+		int LOW_FREQ = mSharedPreference.getCliqFrequency() - 300;
+		int HIGH_FREQ = mSharedPreference.getCliqFrequency() + 300;
 
-		if (HIGH_FREQ > 22000) {
-			HIGH_FREQ = 22000;
+		if (HIGH_FREQ > 22050) {
+			HIGH_FREQ = 22050;
 		}
 
 		int LOW_INDEX = convertFrequencyToIndex(LOW_FREQ);
