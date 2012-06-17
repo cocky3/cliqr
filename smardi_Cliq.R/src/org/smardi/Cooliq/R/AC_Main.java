@@ -448,6 +448,7 @@ public class AC_Main extends Activity {
 		filter.addAction(Service_Cliq.ACTION_CLIQ_TEST_END);
 		filter.addAction(Service_Cliq.ACTION_CLIQ_SOUNDPOWER);
 		filter.addAction(Service_Cliq.ACTION_SEND_THREADHOLD_POWER);
+		filter.addAction(Service_Cliq.ACTION_MIC_DO_NOT_WORK);
 
 		filter.addAction(mSurface.ACTION_SURFACE_CHANGED);
 
@@ -666,11 +667,7 @@ public class AC_Main extends Activity {
 				}
 
 				if (isCliqSoundShutterON == true) {
-					isCliqSoundShutterON = false;
-
-					mCameraPref.setModeCLIQ(0); // 꺼져있는 상태로 저장
-					getWindow().clearFlags(
-							WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+					cliqrModeOff();
 				} else {
 					isCliqSoundShutterON = true;
 					getWindow().addFlags(
@@ -690,6 +687,17 @@ public class AC_Main extends Activity {
 		}
 
 	};
+	
+	private void cliqrModeOff() {
+		if (isCliqSoundShutterON == true) {
+			isCliqSoundShutterON = false;
+
+			mCameraPref.setModeCLIQ(0); // 꺼져있는 상태로 저장
+			getWindow().clearFlags(
+					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		}
+	}
+	
 
 	private void openSettingDialog() {
 		startActivityForResult(new Intent(AC_Main.this, PA_Setting.class),
@@ -1287,6 +1295,24 @@ public class AC_Main extends Activity {
 				if (mSurface.isLoadCameraparameterSuccese == true) {
 					initCameraBySharedPreference();
 				}
+			}
+			
+			//마이크 리소스를 사용할 수 없을 때
+			else if(action.equals(Service_Cliq.ACTION_MIC_DO_NOT_WORK)) {
+				cliqrModeOff();
+				setShutterMode();
+				setCliqSoundShutterONOFF();
+				
+				AlertDialog.Builder alert = new AlertDialog.Builder(AC_Main.this);
+				alert.setTitle("마이크를 사용할 수 없습니다");
+				alert.setMessage("현재 마이크를 사용하고 있는 프로그램이 있는지 확인 해 주십시오.\n해당 프로그램을 종료하셔야 CLIQ.r 앱을 이용하실 수 있습니다.");
+				alert.setPositiveButton(getString(R.string.dialog_OK), new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						dialog.dismiss();
+					}
+				});
+				alert.show();
 			}
 		}
 	};

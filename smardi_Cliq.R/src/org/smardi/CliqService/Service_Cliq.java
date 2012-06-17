@@ -116,6 +116,8 @@ public class Service_Cliq extends Service {
 	public static final String ACTION_MODE_AMPLITUDE_ON = "org.smardi.FFT_Broadcaster.amplitudeModeOn";
 
 	public static final String ACTION_CLIQ_SOUNDPOWER = "org.smardi.FFT_Broadcast.soundpower";
+	
+	public static final String ACTION_MIC_DO_NOT_WORK = "org.smardi.CLIQR.mic_do_not_work";
 	// public static final String ACTION_
 
 	// 계산을 위한 변수들 선언
@@ -175,7 +177,11 @@ public class Service_Cliq extends Service {
 	private int CRIT_CLIQ_OCCURED = 3; // 노이즈와 클리커의 신호를 구분하기 위한 변수
 
 	// -------------------------------------
-
+	private long time_start_recording = 0;	//recording이 시작된 시간
+	private long time_read_recording = 0;	//recording에서 읽어온 시간
+	private final long TIME_READ_ERROR = 100;	//recording하는데 에러가 발생했다고 판단하는 시간
+	
+	
 	@Override
 	public void onCreate() {
 		makeLog("FFTService created.");
@@ -243,12 +249,19 @@ public class Service_Cliq extends Service {
 	private void startRecording() {
 		if (isRecordingRunning == false) {
 			makeLog("startRecording");
+			time_start_recording = new Date().getTime();
+			if(time_read_recording == 0) {
+				time_read_recording = time_start_recording;
+			}
+			cTimer_checkRecordOK.start();
+			
 			// Log.e("Test", "startRecording inside");
 			audioReader.startReader(sampleRate,
 					inputBlockSize * sampleDecimate,
 					new AudioReader.Listener() {
 						@Override
 						public final void onReadComplete(short[] buffer) {
+							time_read_recording = new Date().getTime();
 							// receiveAudio(buffer);
 							processAudio(buffer);
 
@@ -318,12 +331,32 @@ public class Service_Cliq extends Service {
 
 						@Override
 						public void onReadError(int error) {
+							Log.e("DADC", "ERROROROROEROEOREORO!");
 							handleError(error);
 						}
 					});
 			isRecordingRunning = true;
 		}
 	}
+	
+	CountDownTimer cTimer_checkRecordOK = new CountDownTimer(1000, 100) {
+		
+		@Override
+		public void onTick(long millisUntilFinished) {
+			//마이크에 에러가 발생했는지 확인한다
+			if(0 < time_read_recording) {
+				if(TIME_READ_ERROR < new Date().getTime() - time_read_recording) {
+					sendBroadcast(new Intent(ACTION_MIC_DO_NOT_WORK));
+					cTimer_checkRecordOK.cancel();
+				}
+			}
+		}
+		
+		@Override
+		public void onFinish() {
+			//없음
+		}
+	};
 
 	protected boolean detectBigSound() {
 		int threadholdPower = mSharedPreference.getThreadholdPower();
@@ -369,6 +402,9 @@ public class Service_Cliq extends Service {
 			isRecordingRunning = false;
 			makeLog("stopRecording");
 			audioReader.stopReader();
+			
+			time_start_recording = 0;
+			time_read_recording = 0;
 		}
 	}
 
@@ -976,6 +1012,10 @@ public class Service_Cliq extends Service {
 
 			currentPower = 100 + SignalPower.calculatePowerDb(buffer, 0, len);
 
+			if(currentPower == 0) {
+				sendBroadcast(new Intent(ACTION_MIC_DO_NOT_WORK));
+			}
+			
 			mMsg = new Message();
 			mMsg.what = WHAT_CURRENTPOWER;
 			mMsg.obj = currentPower;
