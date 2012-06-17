@@ -170,6 +170,12 @@ public class AC_Main extends Activity {
 	// 사진의 방향을 알아내기 위한 리스너
 	private OrientationEventListener oel = null;
 	private int mAngle = 0;
+	
+	//갤러리가 비어있는지 확인하기 위한...
+	private boolean isGalleryEmpty = false;
+	
+	private int countPastTime = 0; // 타이머가 켜진 상태에서 셔터가 눌리고 지나간 시간
+	int old_remainTime = Integer.MAX_VALUE;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -230,8 +236,18 @@ public class AC_Main extends Activity {
 		oel.disable();
 
 		isRestart = true;
+		
+		//타이머 정지
+		resetTimer();
 
 		Log.e(TAG, "onPause");
+	}
+	
+	private void resetTimer() {
+		isInTimingShot = false;	
+		countPastTime = 0;
+		old_remainTime = Integer.MAX_VALUE;
+		txt_time.setVisibility(View.GONE);
 	}
 
 	// =======================================================
@@ -250,6 +266,8 @@ public class AC_Main extends Activity {
 
 		registBroadcastReceiver();
 
+		resetTimer();
+		
 		if(isRestart == true) {
 			tutorial.setVisibility(View.GONE);
 			isRestart = false;
@@ -568,7 +586,16 @@ public class AC_Main extends Activity {
 
 				break;
 			case R.id.btn_gallary:
+				if(isGalleryEmpty == true) {
+					//TODO 갤러리에 이미지가 없다는 메시지 출력
+					Toast.makeText(AC_Main.this, getString(R.string.there_is_no_picture), Toast.LENGTH_SHORT).show();
+					return;
+				}
 				try {
+					/*Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+					intent = new Intent(Intent.ACTION_VIEW, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+					startActivityForResult(intent, ACTIVITY_GALLARY);
+					 */
 					sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
 							Uri.parse("file://" + getFilesDir())));
 					Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
@@ -581,14 +608,16 @@ public class AC_Main extends Activity {
 									"bucketId",
 									String.valueOf(targetDir.toLowerCase()
 											.hashCode())).build();
+					
 					Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 					startActivityForResult(intent, ACTIVITY_GALLARY);
 				} catch (ActivityNotFoundException e) {
+
 					Toast.makeText(
 							AC_Main.this,
 							"본 기기에서는 갤러리 기능을 지원할 수 없습니다.\n자체 갤러리 기능을 이용 해 주세요.",
 							1000).show();
-					Log.e(TAG, e.getLocalizedMessage());
+					Log.e(TAG, "Error load Gallary:"+e.getLocalizedMessage());
 				}
 				/*
 				 * Intent intent = new Intent();
@@ -824,6 +853,8 @@ public class AC_Main extends Activity {
 				options.inSampleSize = 8;
 				Bitmap tempBmp = BitmapFactory.decodeByteArray(data, 0,
 						data.length, options);
+				//사진이 생겼다고 표시한다
+				isGalleryEmpty = false;
 				updateThumbnail(tempBmp);
 				tempBmp = null;
 			} catch (IOException e) {
@@ -1000,9 +1031,11 @@ public class AC_Main extends Activity {
 			preview_w = (int) Math.round(camera_w * screen_h / camera_h);
 		}
 
-		Log.e("smardi.Cliq", "cw:" + camera_w + " ch:" + camera_h);
-		Log.e("smardi.Cliq", "sw:" + screen_w + " sh:" + screen_h);
-		Log.e("smardi.Cliq", "pw:" + preview_w + " ph:" + preview_h);
+		if(D) {
+			Log.e("smardi.Cliq", "cw:" + camera_w + " ch:" + camera_h);
+			Log.e("smardi.Cliq", "sw:" + screen_w + " sh:" + screen_h);
+			Log.e("smardi.Cliq", "pw:" + preview_w + " ph:" + preview_h);
+		}
 
 		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
 				preview_w, preview_h);
@@ -1048,6 +1081,9 @@ public class AC_Main extends Activity {
 	}
 
 	protected void setTimerButton() {
+		if(isInTimingShot == true) {
+			return;
+		}
 		int delayTime = mCameraParametes.getTimerTime();
 		Drawable timerDrawable = null;
 		switch (delayTime) {
@@ -1137,11 +1173,25 @@ public class AC_Main extends Activity {
 				MediaStore.Images.Media.DATE_TAKEN };
 
 		Bitmap bitmap = null;
-
+		
+		/*
+		 * 이 방식은 DCIM 폴더 외의 이미지도 불러오므로 안씀
+		 * 
 		Cursor imageCursor = managedQuery(
 				MediaStore.Images.Media.EXTERNAL_CONTENT_URI, proj, null, null,
-				MediaStore.Images.Media.DATE_TAKEN + " DESC");
+				MediaStore.Images.Media.DATE_TAKEN + " DESC");*/
 
+		Cursor imageCursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, "bucket_display_name='Camera'", null, null);
+
+		//만약 갤러리에 사진이 없을 경우
+		if(imageCursor.getCount() == 0) {
+			isGalleryEmpty = true;
+			
+			updateThumbnail(BitmapFactory.decodeResource(getResources(), R.drawable.img_none));
+		} else {
+			isGalleryEmpty = false;
+		}
+		
 		if (imageCursor != null && imageCursor.moveToFirst()) {
 			String thumbsImageID;
 			String thumbsData;
@@ -1455,8 +1505,7 @@ public class AC_Main extends Activity {
 	}
 
 	Handler mHandler = new Handler(new Handler.Callback() {
-		int old_remainTime = Integer.MAX_VALUE;
-
+		
 		private int targetBottomMargin = -70;
 		private float currentBottomMargin = 0f;
 		private float speed = 1.5f;
@@ -1586,7 +1635,6 @@ public class AC_Main extends Activity {
 	// 스레드
 	Thread mThread = new Thread(new Runnable() {
 		private final int sleepTime = 25;
-		private int countPastTime = 0; // 타이머가 켜진 상태에서 셔터가 눌리고 지나간 시간
 		private int countBlackScreen = 0;
 
 		private boolean oldIsShowSoundPowerBar = true;
@@ -1597,7 +1645,13 @@ public class AC_Main extends Activity {
 				if (isPressed == true && isAutoFocused == false) {
 					// 클리커가 눌린 것이 감지되면
 					if (new Date().getTime() - timeCliqPressed > TIME_LONGCLICK) {
-						mHandler.sendEmptyMessage(WHAT_AUTOFOCUSING);
+						
+						if(mCameraParametes.getTimerTime() > 0) {
+							isInTimingShot = true;
+						} else if(isInTimingShot == false) {
+							mHandler.sendEmptyMessage(WHAT_AUTOFOCUSING);
+						}
+						//TODO
 						// isPressed = false;
 					}
 				}
@@ -1606,6 +1660,8 @@ public class AC_Main extends Activity {
 						&& isSetCameraParameters == false) {
 					if (mCameraParametes == null) {
 						mCameraParametes = mSurface.mCameraParameters;
+						//타이머를 0으로 초기화
+						mCameraParametes.setTimerTime(0);
 					}
 
 					isSetCameraParameters = true;

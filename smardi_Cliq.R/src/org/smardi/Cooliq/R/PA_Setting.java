@@ -148,6 +148,8 @@ public class PA_Setting extends PreferenceActivity {
 		list_Camera_SceneMode.setSummary(summarySceneMode);
 		cameraPrefCat.addPreference(list_Camera_SceneMode);
 
+		
+		
 		// 화이트 벨런스
 		list_Camera_WhiteBalance = new ListPreference(this);
 		list_Camera_WhiteBalance.setKey(KEY_CAMERA_WHITEBALANCE);
@@ -191,6 +193,16 @@ public class PA_Setting extends PreferenceActivity {
 		list_Camera_WhiteBalance.setSummary(summaryWhiteBalance);
 		cameraPrefCat.addPreference(list_Camera_WhiteBalance);
 
+		//장면 모드가 Auto가 아니면 화이트벨런스를 disable 한다.
+		if(mCameraPref.getSceneMode().toLowerCase().equals("auto")) {
+			list_Camera_WhiteBalance.setEnabled(true);
+		} else {
+			list_Camera_WhiteBalance.setEnabled(false);
+		}
+		
+		
+		
+		
 		// 컬러이팩트
 		list_Camera_ColorEffect = new ListPreference(this);
 		list_Camera_ColorEffect.setKey(KEY_CAMERA_COLOREFFECT);
@@ -231,6 +243,18 @@ public class PA_Setting extends PreferenceActivity {
 		list_Camera_ColorEffect.setSummary(summaryColorEffect);
 		cameraPrefCat.addPreference(list_Camera_ColorEffect);
 
+		//장면 모드가 Auto가 아니면 화이트벨런스를 disable 한다.
+		if(mCameraPref.getSceneMode().toLowerCase().equals("auto")) {
+			list_Camera_ColorEffect.setEnabled(true);
+		} else {
+			list_Camera_ColorEffect.setEnabled(false);
+		}
+		
+		
+		
+		
+		
+		
 		if (mCameraPref.getWhichCamera() == Surface_Picture_Preview.CAMERA_BACK) {
 			// Back 사진 크기
 			String currentBackSize = mCameraPref.getPictureSizes_BACK()[0]
@@ -403,6 +427,16 @@ public class PA_Setting extends PreferenceActivity {
 							"scene mode:"
 									+ sharedPreferences.getString(
 											KEY_CAMERA_SCENEMODE, ""));
+				}
+				
+				
+				//장면 모드가 Auto가 아니면 화이트벨런스를 disable 한다.
+				if(mCameraPref.getSceneMode().toLowerCase().equals("auto")) {
+					list_Camera_ColorEffect.setEnabled(true);
+					list_Camera_WhiteBalance.setEnabled(true);
+				} else {
+					list_Camera_ColorEffect.setEnabled(false);
+					list_Camera_WhiteBalance.setEnabled(false);
 				}
 			}
 

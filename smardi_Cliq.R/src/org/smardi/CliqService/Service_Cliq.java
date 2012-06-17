@@ -4,21 +4,14 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 
-import org.hermit.audalyzer.AudioReader;
-import org.hermit.audalyzer.FFTTransformer;
-import org.hermit.audalyzer.SignalPower;
+import org.hermit.audalyzer.*;
 
-import android.app.AlertDialog;
-import android.app.PendingIntent;
+import android.app.*;
 import android.app.PendingIntent.CanceledException;
-import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.*;
 import android.os.*;
-import android.util.Log;
-import android.widget.Toast;
+import android.util.*;
+import android.widget.*;
 
 public class Service_Cliq extends Service {
 
@@ -169,6 +162,11 @@ public class Service_Cliq extends Service {
 
 	private long time_lastCalculated = 0;
 
+	//Averaging을 위한 변수 선언
+	private ArrayList<float[]> list_soundData = new ArrayList<float[]>();
+	private final int MAX_AVERAGING = 3;	//최대로 중첩시키는 개수
+	
+	
 	// -------------------------------------
 	// 노이즈의 경우 CLIQ.r과 유사한 주파수를 발생할 수 있으나
 	// 대부분 1회성 신호에 그침.
@@ -387,6 +385,7 @@ public class Service_Cliq extends Service {
 				* (1.05 + (double) cliqSensitivity / 100. / 5.)) {
 
 			if (D) {
+				Log.d("smardi.Cliq", "Freq:"+mSharedPreference.getCliqFrequency()+" Hz");
 				Log.e("Test", mSharedPreference.getCliqFrequencyIndex()
 						+ ") CoolickFreq.:" + getDB(cliqFrequencyPower)
 						+ " Threadhold:" + getDB(getCliqThreadhold()));
@@ -395,21 +394,21 @@ public class Service_Cliq extends Service {
 				Log.e("smardi.Cliq", "sensitivity-value:"
 						+ (double) getDB(getCliqThreadhold())
 						* (1.05 + (double) cliqSensitivity / 100. / 2.));
-			}
+			
 
-			// 클리커에서 신호가 들어왔다고 판단된 당시의 10000Hz 이상의 주파수를 csv 파일 형식으로 저장하기 위한 부분
-			String temp = "";
-			for (int i = 0; i < spectrumData.length; i++) {
-				if (convertIndextToFrequency(i) > 10000) {
-					temp += (convertIndextToFrequency(i) + ","
-							+ getDB(spectrumData[i]) + "\r\n");
+				// 클리커에서 신호가 들어왔다고 판단된 당시의 10000Hz 이상의 주파수를 csv 파일 형식으로 저장하기 위한 부분
+				String temp = "";
+				for (int i = 0; i < spectrumData.length; i++) {
+					if (convertIndextToFrequency(i) > 10000) {
+						temp += (convertIndextToFrequency(i) + ","
+								+ getDB(spectrumData[i]) + "\r\n");
+					}
 				}
+	
+				String filename = new Date().getTime() + ".csv";
+	
+				saveFrequency(getFilename(), temp);
 			}
-
-			String filename = new Date().getTime() + ".csv";
-
-			saveFrequency(getFilename(), temp);
-
 			return true;
 		} else {
 			return false;
@@ -464,14 +463,14 @@ public class Service_Cliq extends Service {
 		// return (file.getAbsolutePath() + "/temp_smardi" +
 		// AUDIO_RECORDER_FILE_EXT_WAV);
 	}
-
+	
 	private float getDB(float power) {
 		return (float) ((float) (Math.log10(power) / 6f + 1f) * 400.);
 	}
-
+	
 	private float getCliqFrequencyPower() {
-		int LOW_FREQ = mSharedPreference.getCliqFrequency() - 300;
-		int HIGH_FREQ = mSharedPreference.getCliqFrequency() + 300;
+		int LOW_FREQ = mSharedPreference.getCliqFrequency() - 150;
+		int HIGH_FREQ = mSharedPreference.getCliqFrequency() + 150;
 
 		if (HIGH_FREQ > 22050) {
 			HIGH_FREQ = 22050;
@@ -494,8 +493,8 @@ public class Service_Cliq extends Service {
 		}
 
 		for (int i = LOW_INDEX; i <= HIGH_INDEX; i++) {
-			if (max < spectrumData[i]) {
-				max = spectrumData[i];
+			if (max < getAveragingValue(i)) {
+				max = getAveragingValue(i);
 				maxINDEX = i;
 			}
 		}
@@ -505,22 +504,34 @@ public class Service_Cliq extends Service {
 		return max;
 	}
 
+	private float getAveragingValue(int i) {
+		
+		float sum = 0;
+		float avg = 0;
+		
+		for(int j=0; j<list_soundData.size(); j++) {
+			sum += list_soundData.get(j)[i];
+		}
+		
+		return sum/list_soundData.size();
+	}
+
 	private float getCliqThreadhold() {
 
 		int Freq = mSharedPreference.getCliqFrequency();
 
 		// 클리커 주파수에서 +-100 인 주파수는 제외하고 최대값을 구한다.
-		int leftFrequencyIndex = convertFrequencyToIndex(Freq - 300);
-		int rightFrequencyIndex = convertFrequencyToIndex(Freq + 300);
+		int leftFrequencyIndex = convertFrequencyToIndex(Freq - 150);
+		int rightFrequencyIndex = convertFrequencyToIndex(Freq + 150);
 
 		float tempMax = 0;
 		// int startFrequencyIndex = convertFrequencyToIndex(Freq - 1500);
 		// int endFrequencyIndex = convertFrequencyToIndex(Freq + 1500);
-		int startFrequencyIndex = convertFrequencyToIndex(14000);
-		int endFrequencyIndex = convertFrequencyToIndex(22000);
+		int startFrequencyIndex = convertFrequencyToIndex(Freq - 600);
+		int endFrequencyIndex = convertFrequencyToIndex(Freq + 600);
 
 		int minFrequencyIndex = convertFrequencyToIndex(DETECTING_MIN_FREQ);
-		int maxFrequencyIndex = convertFrequencyToIndex(22000);
+		int maxFrequencyIndex = convertFrequencyToIndex(22050);
 		if (startFrequencyIndex < minFrequencyIndex) {
 			startFrequencyIndex = minFrequencyIndex;
 		}
@@ -531,8 +542,8 @@ public class Service_Cliq extends Service {
 		// 최대값을 구함.
 		for (int i = startFrequencyIndex; i < endFrequencyIndex; i++) {
 			if (i < leftFrequencyIndex || rightFrequencyIndex < i) {
-				if (tempMax < spectrumData[i]) {
-					tempMax = spectrumData[i];
+				if (tempMax < getAveragingValue(i)) {
+					tempMax = getAveragingValue(i);
 				}
 			}
 		}
@@ -989,6 +1000,14 @@ public class Service_Cliq extends Service {
 			spectrumIndex = spectrumAnalyser.getResults(spectrumData,
 					spectrumHist, spectrumIndex);
 
+		//Averaging을 위해서 변수를 추가
+		if(list_soundData.size() < MAX_AVERAGING) {
+			list_soundData.add(spectrumData);
+		} else {
+			list_soundData.remove(0);
+			list_soundData.add(spectrumData);
+		}
+		
 		mMsg = new Message();
 		mMsg.what = WHAT_SPECTRUMDATA;
 		mMsg.obj = spectrumData;
