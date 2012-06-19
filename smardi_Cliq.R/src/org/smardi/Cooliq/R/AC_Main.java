@@ -12,9 +12,7 @@ import android.database.*;
 import android.graphics.*;
 import android.graphics.drawable.*;
 import android.hardware.*;
-import android.hardware.Camera.AutoFocusCallback;
-import android.hardware.Camera.Parameters;
-import android.hardware.Camera.PictureCallback;
+import android.hardware.Camera.*;
 import android.hardware.Camera;
 import android.media.*;
 import android.net.*;
@@ -34,7 +32,7 @@ public class AC_Main extends Activity {
 	private Manage_Camera_SharedPreference mCameraPref;
 
 	// 컴포넌트
-	Surface_Picture_Preview mSurface;
+	public static Surface_Picture_Preview mSurface;
 
 	// 튜토리얼
 	private RelativeLayout tutorial;
@@ -176,6 +174,9 @@ public class AC_Main extends Activity {
 	
 	private int countPastTime = 0; // 타이머가 켜진 상태에서 셔터가 눌리고 지나간 시간
 	int old_remainTime = Integer.MAX_VALUE;
+	
+	//카메라 파라미터
+	public static Camera.Parameters params = null;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -277,8 +278,21 @@ public class AC_Main extends Activity {
 
 			@Override
 			public void onOrientationChanged(int orientation) {
-				Log.e("test", "angle:" + orientation);
+				//Log.e("test", "angle:" + orientation);
 				mAngle = orientation;
+				
+				/*if ((0 <= mAngle && mAngle < 60)
+						|| (300 <= mAngle && mAngle < 360)) { // 90도 회전
+					mSurface.mCamera.setDisplayOrientation(90);
+				} else if (60 <= mAngle && mAngle < 120) { // 180도 회전
+					mSurface.mCamera.setDisplayOrientation(180);
+				} else if (120 <= mAngle && mAngle < 240) { // 270도 회전
+					mSurface.mCamera.setDisplayOrientation(270);
+				} else if (240 <= mAngle && mAngle < 300) { // 그대로
+					mSurface.mCamera.setDisplayOrientation(0);
+				}*/
+				
+				//setCameraDisplayOrientation(AC_Main.this, whichCamera, mSurface.mCamera, angle);
 			}
 		};
 		/*
@@ -286,9 +300,59 @@ public class AC_Main extends Activity {
 		 * AC_Main.class)); }
 		 */
 
-		// oel.enable();
+		oel.enable();
 	}
 
+	public static void setCameraDisplayOrientation(Activity activity,
+			int cameraId, android.hardware.Camera camera, int angle) {
+		android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
+		android.hardware.Camera.getCameraInfo(cameraId, info);
+		int rotation = activity.getWindowManager().getDefaultDisplay()
+				.getRotation();
+		int degrees = 0;
+		
+		switch (rotation) {
+		case Surface.ROTATION_0:
+			degrees = 0;
+			break;
+		case Surface.ROTATION_90:
+			degrees = 90;
+			break;
+		case Surface.ROTATION_180:
+			degrees = 180;
+			break;
+		case Surface.ROTATION_270:
+			degrees = 270;
+			break;
+		}
+/*		
+		if ((0 <= angle && angle < 60) || (300 <= angle && angle < 360)) { // 90도회전
+			Log.e("CLIQ", "90");
+			degrees = 90;
+		} else if (60 <= angle && angle < 120) { // 180도 회전
+			Log.e("CLIQ", "180");
+			degrees = 180;
+		} else if (120 <= angle && angle < 240) { // 270도 회전
+			Log.e("CLIQ", "270");
+			degrees = 270;
+		} else if (240 <= angle && angle < 300) { // 그대로
+			Log.e("CLIQ", "0");
+			degrees = 0;
+		}
+
+		Log.e("CLIQ", "angle:" + angle);
+		Log.e("CLIQ", "degree:"+degrees);
+		*/
+		int result;
+		if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+			result = (info.orientation + degrees) % 360;
+			result = (360 - result) % 360; // compensate the mirror
+		} else { // back-facing
+			result = (info.orientation - degrees + 360) % 360;
+		}
+		camera.setDisplayOrientation(result);
+	}
+	
 	// =========================================================
 
 	@Override
@@ -314,7 +378,7 @@ public class AC_Main extends Activity {
 				R.drawable.c_shutter));
 
 		try {
-			Parameters params = mSurface.mCamera.getParameters();
+			params = mSurface.mCamera.getParameters();
 
 			// 플래시 모드가 같은지 확인, 없으면 처음 것 적용
 
@@ -484,7 +548,6 @@ public class AC_Main extends Activity {
 		// 왼편 컨트롤
 		btn_mode_change = (ImageView) findViewById(R.id.btn_mode_change);
 		btn_shutter = (ImageView) findViewById(R.id.btn_shutter);
-		light_onAir = (ImageView) findViewById(R.id.light_on_air);
 		light_onCliq = (ImageView) findViewById(R.id.light_cliq);
 		txt_time = (TextView) findViewById(R.id.txt_time);
 
@@ -840,21 +903,22 @@ public class AC_Main extends Activity {
 				ExifInterface mExif = new ExifInterface(getPhotoFilename());
 				mExif.setAttribute(ExifInterface.TAG_DATETIME,
 						new Date(System.currentTimeMillis()).toString());
-				/*
-				 * if((0 <= mAngle && 60 < mAngle) || (300 <= mAngle && 360 <
-				 * mAngle)) { // 90도 회전
-				 * mExif.setAttribute(ExifInterface.TAG_ORIENTATION,
-				 * ""+ExifInterface.ORIENTATION_ROTATE_90); } else if(60 <=
-				 * mAngle && mAngle < 120) { // 180도 회전
-				 * mExif.setAttribute(ExifInterface.TAG_ORIENTATION,
-				 * ""+ExifInterface.ORIENTATION_ROTATE_180); } else if(120 <=
-				 * mAngle && mAngle < 240) { // 270도 회전
-				 * mExif.setAttribute(ExifInterface.TAG_ORIENTATION,
-				 * ""+ExifInterface.ORIENTATION_ROTATE_270); } else if(240 <=
-				 * mAngle && mAngle < 300) { // 그대로
-				 * mExif.setAttribute(ExifInterface.TAG_ORIENTATION,
-				 * ""+ExifInterface.ORIENTATION_NORMAL); }
-				 */
+				
+				if ((0 <= mAngle && mAngle < 60)
+						|| (300 <= mAngle && mAngle < 360)) { // 90도 회전
+					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
+							+ ExifInterface.ORIENTATION_ROTATE_90);
+				} else if (60 <= mAngle && mAngle < 120) { // 180도 회전
+					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
+							+ ExifInterface.ORIENTATION_ROTATE_180);
+				} else if (120 <= mAngle && mAngle < 240) { // 270도 회전
+					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
+							+ ExifInterface.ORIENTATION_ROTATE_270);
+				} else if (240 <= mAngle && mAngle < 300) { // 그대로
+					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
+							+ ExifInterface.ORIENTATION_NORMAL);
+				}
+
 				mExif.saveAttributes();
 
 				BitmapFactory.Options options = new BitmapFactory.Options();
@@ -1013,8 +1077,61 @@ public class AC_Main extends Activity {
 				.getDefaultDisplay();
 		int screen_w = display.getWidth();
 		int screen_h = display.getHeight();
+		
+		Size opti = null;
+		
+		Log.e("CLIQ", "Call surfaceChanged");
 
-		int[] camera_size = new int[2];
+			List<Size> arSize = params.getSupportedPreviewSizes();
+			/*if (false) {
+				for (Size size : arSize) {
+					Log.i("smardi.Cliq", "preview:" + size.width + " x "
+							+ size.height);
+				}
+			}*/
+
+			if (arSize == null) {
+				params.setPreviewSize(screen_w, screen_h);
+			} else {
+				int diff = 10000;
+				opti = null;
+				for (Size s : arSize) {
+					if (Math.abs(s.height - screen_w) < diff) {
+						diff = Math.abs(s.height - screen_h);
+						opti = s;
+					}
+				}
+
+				// getOptimalPreviewSize 함수를 이용해서 최적 사이즈를 구함
+				// opti = getOptimalPreviewSize(arSize, width, height);
+
+				params.setPreviewSize(opti.width, opti.height);
+
+				// -----------------------------------------------------------------
+				// params.setPreviewSize(width, height);
+
+				// -----------------------------------------------------------------
+
+				if (true) {
+					Log.e("smardi.Cliq", "opti.w:" + opti.width + " opti.h:"
+							+ opti.height);
+				}
+			}
+			mSurface.mCamera.setParameters(params);
+			mSurface.mCamera.startPreview();
+
+			//mSurface.mCamera.setCameraParameters(params);
+			//isSetCameraParameters = true;
+
+			//isLoadCameraparameterSuccese = true;
+
+			// 화면이 갱신된 것을 방송으로 전달
+			//sendBroadcast(new Intent().setAction(mSurface.ACTION_SURFACE_CHANGED));
+		
+			int preview_w = 0;
+			int preview_h = 0;
+		
+/*		int[] camera_size = new int[2];
 
 		if (whichCamera == mSurface.CAMERA_FACE) {
 			camera_size = mCameraPref.getPictureSizes_FRONT();
@@ -1037,10 +1154,13 @@ public class AC_Main extends Activity {
 			// 사진 해상도가 화면보다 세로로 더 길 때
 			preview_h = screen_h;
 			preview_w = (int) Math.round(camera_w * screen_h / camera_h);
-		}
+		}*/
 
-		if(D) {
-			Log.e("smardi.Cliq", "cw:" + camera_w + " ch:" + camera_h);
+		preview_w = opti.width;
+		preview_h = opti.height;
+		
+		if(true) {
+			//Log.e("smardi.Cliq", "cw:" + camera_w + " ch:" + camera_h);
 			Log.e("smardi.Cliq", "sw:" + screen_w + " sh:" + screen_h);
 			Log.e("smardi.Cliq", "pw:" + preview_w + " ph:" + preview_h);
 		}
@@ -1189,8 +1309,19 @@ public class AC_Main extends Activity {
 				MediaStore.Images.Media.EXTERNAL_CONTENT_URI, proj, null, null,
 				MediaStore.Images.Media.DATE_TAKEN + " DESC");*/
 
-		Cursor imageCursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, "bucket_display_name='Camera'", null, null);
-
+		Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+		String targetDir = Environment
+				.getExternalStorageDirectory().toString()
+				+ "/DCIM/Camera"; // 특정 경로!!
+		uri = uri
+				.buildUpon()
+				.appendQueryParameter(
+						"bucketId",
+						String.valueOf(targetDir.toLowerCase()
+								.hashCode())).build();
+		
+		Cursor imageCursor = getContentResolver().query(uri, proj, "bucket_display_name='CAMERA'", null, MediaStore.Images.Media.DATE_TAKEN + " DESC");
+		
 		//만약 갤러리에 사진이 없을 경우
 		if(imageCursor.getCount() == 0) {
 			isGalleryEmpty = true;

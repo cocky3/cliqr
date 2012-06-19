@@ -5,6 +5,7 @@ import java.text.*;
 import java.util.*;
 
 import org.hermit.audalyzer.*;
+import org.smardi.CliqService.Dialog.*;
 
 import android.app.*;
 import android.app.PendingIntent.CanceledException;
@@ -134,11 +135,6 @@ public class Service_Cliq extends Service {
 	ArrayList<Integer> sortedFrequencyIndex = null; // 빈도수 별로 내림차순 정렬 된 인덱스
 	ArrayList<Integer> sortedFrequencyRepeat = null; // 빈도수 별로 내림차순 정렬 된 빈도수
 
-	private boolean isRegistrating = false; // 주파수를 측정하고 있는 중인지 (등록하는 과정이 진행
-											// 중인지)
-	private boolean isTesting = false; // 테스트를 하는 중인지
-	private boolean isGreenButtonON = false; // 초록 버튼이 활성화 되어있는지
-
 	private boolean isRecordingRunning = false; // 녹음 중인지
 
 	// ------------------------------------------
@@ -265,50 +261,18 @@ public class Service_Cliq extends Service {
 							// receiveAudio(buffer);
 							processAudio(buffer);
 
-							if (isRegistrating == false && isTesting == false) {
-								if (cliqMode == MODE_CLIQING) {
-									if (checkIsCliqingOccured() == true) {
-
-										count_cliq_occured = count_cliq_occured + 1;
-
-										if (isTrigered == false
-												&& CRIT_CLIQ_OCCURED <= count_cliq_occured) {
-											time_Pressed = new Date().getTime();
-
-											Log.e("smardi.Cliq", "TRIGERD");
-											Intent intent = new Intent();
-											intent.setAction(ACTION_CLIQ_CLICK_TRIGERED);
-											sendBroadcast(intent);
-											isTrigered = true;
-										} else if (new Date().getTime()
-												- time_Pressed < 200) {
-											time_Pressed = new Date().getTime();
-										}
-									} else {
-
-										count_cliq_occured = 0;
-
-										if (new Date().getTime() - time_Pressed >= 200) {
-											Intent intent = new Intent();
-											intent.setAction(ACTION_CLIQ_RELEASE_TRIGERED);
-											sendBroadcast(intent);
-											isTrigered = false;
-										}
-									}
-								} else if (cliqMode == MODE_AMPLITUDE) {
-									detectBigSound();
-								}
-							} else if (isTesting == true) {
+							if (cliqMode == MODE_CLIQING) {
 								if (checkIsCliqingOccured() == true) {
-									
+
 									count_cliq_occured = count_cliq_occured + 1;
-									
-									if (isTrigered == false && CRIT_CLIQ_OCCURED <= count_cliq_occured) {
+
+									if (isTrigered == false
+											&& CRIT_CLIQ_OCCURED <= count_cliq_occured) {
 										time_Pressed = new Date().getTime();
 
-										Log.e("smardi.Cliq", "TEST TRIGERD");
+										Log.e("smardi.Cliq", "TRIGERD");
 										Intent intent = new Intent();
-										intent.setAction(ACTION_CLIQ_TEST_CLICK_TRIGERED);
+										intent.setAction(ACTION_CLIQ_CLICK_TRIGERED);
 										sendBroadcast(intent);
 										isTrigered = true;
 									} else if (new Date().getTime()
@@ -316,22 +280,23 @@ public class Service_Cliq extends Service {
 										time_Pressed = new Date().getTime();
 									}
 								} else {
-									
+
 									count_cliq_occured = 0;
-									
+
 									if (new Date().getTime() - time_Pressed >= 200) {
 										Intent intent = new Intent();
-										intent.setAction(ACTION_CLIQ_TEST_RELEASE_TRIGERED);
+										intent.setAction(ACTION_CLIQ_RELEASE_TRIGERED);
 										sendBroadcast(intent);
 										isTrigered = false;
 									}
 								}
+							} else if (cliqMode == MODE_AMPLITUDE) {
+								detectBigSound();
 							}
 						}
 
 						@Override
 						public void onReadError(int error) {
-							Log.e("DADC", "ERROROROROEROEOREORO!");
 							handleError(error);
 						}
 					});
@@ -417,9 +382,11 @@ public class Service_Cliq extends Service {
 			return false;
 		}
 
-		if ((double) getDB(cliqFrequencyPower) > (double) getDB(getCliqThreadhold())
+		if ((double) getDB(cliqFrequencyPower) - 7 > (double) (getDB(getCliqThreadhold()) - 7)
 				* (1.05 + (double) cliqSensitivity / 100. / 5.)) {
 
+			//-------------------------------------------------
+			//로그파일 작성
 			if (D) {
 				Log.d("smardi.Cliq", "Freq:"+mSharedPreference.getCliqFrequency()+" Hz");
 				Log.e("Test", mSharedPreference.getCliqFrequencyIndex()
@@ -445,6 +412,8 @@ public class Service_Cliq extends Service {
 	
 				saveFrequency(getFilename(), temp);
 			}
+			//로그파일 작성 끝
+			//-------------------------------------------------
 			return true;
 		} else {
 			return false;
@@ -629,22 +598,6 @@ public class Service_Cliq extends Service {
 			case WHAT_SPECTRUMDATA:
 				float[] sData = (float[]) msg.obj;
 				mMaxData = getMaxAmplitudeFrequency(sData);
-
-				// makeLog("isRegistrating:"+isRegistrating +
-				// "isGreenButtonON:"+isGreenButtonON);
-				if (isRegistrating == true && isGreenButtonON == true) {
-
-					if (mMaxData[0] > 0) {
-						list_maxIndexGreen.add(mMaxData[0]);
-						list_maxValueGreen.add(mMaxData[1]);
-						list_spectrumDataGreen.add(sData);
-					}
-				} else if (isRegistrating == true && isGreenButtonON == false) {
-					list_maxIndexGray.add(mMaxData[0]);
-					list_maxValueGray.add(mMaxData[1]);
-					list_spectrumDataGray.add(sData);
-				}
-
 				break;
 			}
 		}
@@ -661,113 +614,22 @@ public class Service_Cliq extends Service {
 				isCliqRunning = false;
 			}
 			if (action.equals(ACTION_CLIQ_REGISTRATION_START)) {
-				if (isRegistrating == false) {
-					if (isCliqRunning == false) {
-						isCliqRunning = true;
-					}
-					makeLog("Registration start");
+				
+				isCliqRunning = false;
+				
+				// 클리커 주파수를 등록한다는 메시지가 왔을 경우
+				Intent popupIntent = new Intent(context,
+				// AC_SetCliqFrequency.class);
+						AC_Dialog_CLIQr_Register.class);
 
-					isRegistrating = true;
-					list_maxIndexGray = new ArrayList<Integer>();
-					list_maxIndexGreen = new ArrayList<Integer>();
-					list_maxValueGray = new ArrayList<Integer>();
-					list_maxValueGreen = new ArrayList<Integer>();
-					list_spectrumDataGray = new ArrayList<float[]>();
-					list_spectrumDataGreen = new ArrayList<float[]>();
-
-					// 클리커 주파수를 등록한다는 메시지가 왔을 경우
-					Intent popupIntent = new Intent(context,
-							AC_SetCliqFrequency.class);
-
-					PendingIntent pie = PendingIntent.getActivity(context, 0,
-							popupIntent, PendingIntent.FLAG_ONE_SHOT);
-					try {
-						pie.send();
-					} catch (CanceledException e) {
-						Log.e("FFTService", e.getMessage());
-					}
+				PendingIntent pie = PendingIntent.getActivity(context, 0,
+						popupIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+				try {
+					pie.send();
+				} catch (CanceledException e) {
+					Log.e("FFTService", e.getMessage());
 				}
-			} else if (action.equals(ACTION_CLIQ_REGISTRATION_RESTART)) {
-				if (isRegistrating == false) {
-					if (isCliqRunning == false) {
-						isCliqRunning = true;
-					}
-					makeLog("Registration re-start");
-
-					isRegistrating = true;
-					list_maxIndexGray = new ArrayList<Integer>();
-					list_maxIndexGreen = new ArrayList<Integer>();
-					list_maxValueGray = new ArrayList<Integer>();
-					list_maxValueGreen = new ArrayList<Integer>();
-					list_spectrumDataGray = new ArrayList<float[]>();
-					list_spectrumDataGreen = new ArrayList<float[]>();
-
-				}
-			} else if (action.equals(ACTION_GREEN_BUTTON_IS_ON)) {
-				if (isGreenButtonON == false) {
-					makeLog("Green button on" + list_maxIndexGreen.size());
-					isGreenButtonON = true;
-				}
-
-			} else if (action.equals(ACTION_GRAY_BUTTON_IS_ON)) {
-				if (isGreenButtonON == true) {
-					makeLog("Gray Button on" + list_maxIndexGreen.size());
-					isGreenButtonON = false;
-				}
-
-			} else if (action.equals(ACTION_CLIQ_REGISTRATION_END)) {
-
-				makeLog("isRegistrating:" + isRegistrating);
-
-				if (isRegistrating == true) {
-					if (cliqMode == MODE_NONE) {
-						isCliqRunning = false;
-					} else {
-						isCliqRunning = true;
-					}
-					makeLog("Registration end" + list_maxIndexGreen.size());
-
-					isRegistrating = false;
-					int cliqFreq = calculateRegistrationData();
-
-					// 클리커 주파수가 0보다 작으면 제대로 설정이 안된 것
-					if (cliqFreq < 0) {
-						makeLog("Cliq.R registration is FAIL");
-						makeLog("Cliq.R freq:" + cliqFreq);
-						intent = new Intent();
-						intent.setAction(ACTION_CLIQ_REGISTRATION_FAIL);
-						sendBroadcast(intent);
-					} else {
-						makeLog("Cliq.R freq:" + cliqFreq);
-						// Intent broadIntent = new Intent();
-						mSharedPreference.setCliqFrequency(cliqFreq);
-						mSharedPreference
-								.setCliqFrequencyIndex(sortedFrequencyIndex
-										.get(0));
-						intent = new Intent();
-						intent.setAction(ACTION_SEND_CLIQ_FREQUENCY);
-						sendBroadcast(intent);
-						// Toast.makeText(context,
-						// "Culiq frequency:"+coolickerFreq+"Hz", 1000).show();
-						// Toast.makeText(context,
-						// "Index:"+sortedFrequencyIndex.get(0), 1000).show();
-					}
-				}
-
-			} else if (action.equals(ACTION_CLIQ_REGISTRATION_CLOSE)) {
-				isRegistrating = false;
-
-				isCliqRunning = false; // 이렇게 하면 Preference 페이지에서 무조건 마이크가 꺼짐
-
-				/*
-				 * 이렇게 하면 클리커 모드가 켜져 있을 경우 Preference 페이지에서도 마이크가 활성화 되어있음
-				 * if(cliqMode == MODE_NONE) { isCliqRunning = false; }else {
-				 * isCliqRunning = true; }
-				 */
-
-			} else if (action.equals(ACTION_CLIQ_REGISTRATION_END_ERROR)) {
-				isRegistrating = false;
-			} else if (action.equals(ACTION_CLIQ_TEST_START)) {
+			}  else if (action.equals(ACTION_CLIQ_TEST_START)) {
 				// 만약에 Frequency가 기본값인 0이면 설정을 하라고 메시지를 출력한다.
 				if (mSharedPreference.getCliqFrequency() == 0) {
 					Toast.makeText(context, "Please regist your CLIQ.r!", 1000)
@@ -777,13 +639,13 @@ public class Service_Cliq extends Service {
 					sendBroadcast(intent);
 					return;
 				}
-
-				isTesting = true;
-				isCliqRunning = true;
+				
+				isCliqRunning = false;
 				// cliqMode = MODE_CLIQING;
 				// 클리커 연결을 테스트한다는 메시지가 왔을 경우
 				Intent popupIntent = new Intent(context,
-						AC_CliqConnectionTest.class);
+						//AC_CliqConnectionTest.class);
+						AC_Dialog_CLIQr_Test.class);
 
 				PendingIntent pie = PendingIntent.getActivity(context, 0,
 						popupIntent, PendingIntent.FLAG_ONE_SHOT);
@@ -792,10 +654,6 @@ public class Service_Cliq extends Service {
 				} catch (CanceledException e) {
 					Log.e("Test", e.getMessage());
 				}
-			} else if (action.equals(ACTION_CLIQ_TEST_END)) {
-				isTesting = false;
-
-				isCliqRunning = false; // 테스트가 끝나면 마이크를 끔
 			} else if (action.equals(ACTION_SET_THREADHOLD_POWER)) {
 				// 볼륨 인식 최소 값을 전달받았을 때
 				mSharedPreference.setThreadholdPower(intent.getIntExtra(
@@ -828,74 +686,6 @@ public class Service_Cliq extends Service {
 						mSharedPreference.getThreadholdPower());
 				sendBroadcast(intent);
 			}
-		}
-
-		/**
-		 * 
-		 * 
-		 * @return
-		 */
-		private int calculateRegistrationData() {
-
-			// 수집된 최대값을 갖는 frequency index들의 빈도를 계산한다.
-			ArrayList<Integer> UnsortedFrequencyIndex = new ArrayList<Integer>();
-			ArrayList<Integer> UnsortedFrequencyRepeate = new ArrayList<Integer>();
-
-			// makeLog("list_maxIndexGreen.size()="+list_maxIndexGreen.size());
-
-			for (; list_maxIndexGreen.size() > 0;) {
-				int tempIndex = list_maxIndexGreen.get(0);
-				int countRepeat = 0;
-
-				for (int j = 0; list_maxIndexGreen.size() > 0
-						&& j < list_maxIndexGreen.size(); j++) {
-					if (tempIndex == list_maxIndexGreen.get(j)) {
-						list_maxIndexGreen.remove(j);
-						list_maxValueGreen.remove(j);
-						j--;
-						countRepeat++;
-					}
-				}
-
-				UnsortedFrequencyIndex.add(tempIndex);
-				UnsortedFrequencyRepeate.add(countRepeat);
-			}
-
-			// 계산된 인덱스별 빈도값을 빈도에 대한 내림차순으로 정렬한다.
-			// 빈도수를 int 배열에 입력한다.
-			int[] sortedFrequencyRepeat_intArray = new int[UnsortedFrequencyIndex
-					.size()];
-			for (int i = 0; i < UnsortedFrequencyIndex.size(); i++) {
-				sortedFrequencyRepeat_intArray[i] = UnsortedFrequencyRepeate
-						.get(i);
-			}
-			// 정렬한다.
-			Arrays.sort(sortedFrequencyRepeat_intArray);
-			// 역정렬한다.(내림차순으로 변환)
-			reverseArrayInt(sortedFrequencyRepeat_intArray);
-
-			// 정렬된 빈도수에 맞게 index를 정렬한다.
-			sortedFrequencyIndex = new ArrayList<Integer>();
-			sortedFrequencyRepeat = new ArrayList<Integer>();
-			for (int i = 0; i < UnsortedFrequencyIndex.size(); i++) {
-				sortedFrequencyIndex.add(UnsortedFrequencyIndex
-						.get(UnsortedFrequencyRepeate
-								.indexOf(sortedFrequencyRepeat_intArray[i])));
-				sortedFrequencyRepeat.add(sortedFrequencyRepeat_intArray[i]);
-			}
-
-			int tempCliqFrequency = 0;
-
-			if (sortedFrequencyIndex.size() > 0) {
-				tempCliqFrequency = convertIndextToFrequency(sortedFrequencyIndex
-						.get(0) - 1);
-			} else {
-				tempCliqFrequency = -1;
-			}
-
-			// 검증작업은 추후 구현
-
-			return tempCliqFrequency;
 		}
 	};
 

@@ -249,7 +249,12 @@ public class Manage_Camera_SharedPreference {
 		String value = "";
 		
 		for (int i=0; i<pictureSize.size(); i++) {
-			String tempSize = pictureSize.get(i).width + " x " + pictureSize.get(i).height;
+			int width = pictureSize.get(i).width;
+			int height = pictureSize.get(i).height;
+			String pixel = String.format("%.1f", Math.round(width*height/100000f)/10f);
+			String currentSize = width+ " x " + height + " ("+pixel+"M)";
+			
+			String tempSize = currentSize;
 			if(i > 0) {
 				value += ("," + tempSize);
 			} else {
@@ -280,7 +285,12 @@ public class Manage_Camera_SharedPreference {
 		String value = "";
 		
 		for (int i=0; i<pictureSize.size(); i++) {
-			String tempSize = pictureSize.get(i).width + " x " + pictureSize.get(i).height;
+			int width = pictureSize.get(i).width;
+			int height = pictureSize.get(i).height;
+			String pixel = String.format("%.1f", Math.round(width*height/100000f)/10f);
+			String currentSize = width+ " x " + height + " ("+pixel+"M)";
+			
+			String tempSize = currentSize;
 			if(i > 0) {
 				value += ("," + tempSize);
 			} else {

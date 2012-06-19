@@ -14,7 +14,7 @@ public class Surface_Picture_Preview extends SurfaceView implements
 		SurfaceHolder.Callback {
 	private boolean D = true;
 
-	SurfaceHolder mHolder;
+	public SurfaceHolder mHolder;
 	Camera mCamera = null;
 	Context mContext = null;
 	public CameraParameters mCameraParameters;

@@ -302,8 +302,8 @@
             android:layout_marginRight="20dp"
             android:layout_toLeftOf="@id/shutter_layout"
             android:text=""
-            android:textColor="#77FFFFFF"
-            android:textSize="60sp" />
+            android:textColor="#33FFFFFF"
+            android:textSize="240sp" />
     </RelativeLayout>
 
     <!-- 사운드 감도 조절 -->
