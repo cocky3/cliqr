@@ -49,6 +49,8 @@
     <string name="setting_change_sensitivity_title">Change sensitivity</string>
     <string name="setting_title_tutorial">Tutorial</string>
     <string name="setting_content_tutorial">Review tutorial</string>
+    <string name="setting_title_explain_component">화면 구성 확인</string>
+    <string name="setting_content_explain_component">CLIQ.r의 화면 구성을 확인합니다.</string>
     <string name="setting_registration_content">Regist the signal of CLIQ.r</string>
     <string name="setting_communication_test_content">Test communication with CLIQ.r</string>
     <string name="setting_change_sensitivity_content">Change the sensing sensitivity of the signal received from CLIQ.r</string>

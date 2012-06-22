@@ -156,7 +156,7 @@ public class Service_Cliq extends Service {
 	private long time_Released = 0;
 	private boolean isTrigered = false; // 이벤트를 전송했는지
 
-	private final int DETECTING_MIN_FREQ = 15000;
+	private final int DETECTING_MIN_FREQ = 4000;
 
 	private long time_lastCalculated = 0;
 
@@ -175,7 +175,7 @@ public class Service_Cliq extends Service {
 	// -------------------------------------
 	private long time_start_recording = 0;	//recording이 시작된 시간
 	private long time_read_recording = 0;	//recording에서 읽어온 시간
-	private final long TIME_READ_ERROR = 100;	//recording하는데 에러가 발생했다고 판단하는 시간
+	private final long TIME_READ_ERROR = 1000;	//recording하는데 에러가 발생했다고 판단하는 시간
 	
 	
 	@Override
@@ -257,6 +257,7 @@ public class Service_Cliq extends Service {
 					new AudioReader.Listener() {
 						@Override
 						public final void onReadComplete(short[] buffer) {
+							
 							time_read_recording = new Date().getTime();
 							// receiveAudio(buffer);
 							processAudio(buffer);
@@ -373,6 +374,9 @@ public class Service_Cliq extends Service {
 		}
 	}
 
+	
+	float MINMIN = Float.MAX_VALUE;
+	
 	protected boolean checkIsCliqingOccured() {
 		float cliqFrequencyPower = getCliqFrequencyPower();
 
@@ -382,8 +386,17 @@ public class Service_Cliq extends Service {
 			return false;
 		}
 
-		if ((double) getDB(cliqFrequencyPower) - 7 > (double) (getDB(getCliqThreadhold()) - 7)
-				* (1.05 + (double) cliqSensitivity / 100. / 5.)) {
+		if(MINMIN > getDB(getCliqFrequencyPower())) {
+			MINMIN = getDB(getCliqFrequencyPower());
+		}
+		
+		if(D) {
+			Log.e("AA", "C:"+String.format("%3.2f", getDB(cliqFrequencyPower) - MINMIN)+"		T:"+String.format("%3.2f", getDB(getCliqThreadhold()) - MINMIN));
+			Log.e("BB", "F:"+mSharedPreference.getCliqFrequency());
+		}
+		
+		if ((double) getDB(cliqFrequencyPower) - MINMIN > (double) (getDB(getCliqThreadhold()) - MINMIN)
+				* (1.05 + (double) cliqSensitivity / 100./2)) {
 
 			//-------------------------------------------------
 			//로그파일 작성
@@ -532,8 +545,8 @@ public class Service_Cliq extends Service {
 		float tempMax = 0;
 		// int startFrequencyIndex = convertFrequencyToIndex(Freq - 1500);
 		// int endFrequencyIndex = convertFrequencyToIndex(Freq + 1500);
-		int startFrequencyIndex = convertFrequencyToIndex(Freq - 600);
-		int endFrequencyIndex = convertFrequencyToIndex(Freq + 600);
+		int startFrequencyIndex = convertFrequencyToIndex(Freq - 700);
+		int endFrequencyIndex = convertFrequencyToIndex(Freq + 700);
 
 		int minFrequencyIndex = convertFrequencyToIndex(DETECTING_MIN_FREQ);
 		int maxFrequencyIndex = convertFrequencyToIndex(22050);

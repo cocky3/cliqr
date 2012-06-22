@@ -95,7 +95,7 @@ public class Frequency {
 
 	private long time_lastCalculated = 0;
 
-	private final int DETECTING_MIN_FREQ = 16000;
+	private final int DETECTING_MIN_FREQ = 5000;
 
 	Context mContext = null;
 
@@ -493,7 +493,7 @@ public class Frequency {
 		
 		//클리커 주파수 대역에서 가장 높은 주파수 값을 내보낸다
 		if(isCliqrRegistation == true) {
-			int[] result = getMaxAmplitudeFrequency(spectrumData, 16000, 21050);
+			int[] result = getMaxAmplitudeFrequency(spectrumData, DETECTING_MIN_FREQ, 21050);
 			Intent intentHightestFreq = new Intent().setAction(ACTION_CLIQ_REGIST_HIGHEST_FREQUENCY);
 			intentHightestFreq.putExtra("freq", convertIndextToFrequency(result[0]));
 			mContext.sendBroadcast(intentHightestFreq);

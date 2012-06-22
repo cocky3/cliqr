@@ -372,7 +372,8 @@
         android:id="@+id/tutorial"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:background="#A6000000" >
+        android:background="#A6000000"
+        android:visibility="gone" >
 
         <ImageView
             android:id="@+id/tutorial_left"

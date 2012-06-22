@@ -205,7 +205,7 @@ public class AC_Main extends Activity {
 
 		// 튜토리얼 나타내기
 		if (getIntent().getBooleanExtra("tutorial", false) == false) {
-			tutorial.setVisibility(View.GONE);
+			tutorial.setVisibility(View.INVISIBLE);
 		}
 		/*
 		 * Intent intent = new Intent();
@@ -270,7 +270,7 @@ public class AC_Main extends Activity {
 		resetTimer();
 		
 		if(isRestart == true) {
-			tutorial.setVisibility(View.GONE);
+			//tutorial.setVisibility(View.GONE);
 			isRestart = false;
 		}
 		
@@ -530,7 +530,12 @@ public class AC_Main extends Activity {
 		// 튜토리얼
 		tutorial = (RelativeLayout) findViewById(R.id.tutorial);
 		//tutorial_left = (ImageView)findViewById(R.id.tutorial_left);
-
+		
+		if(mSharedPreference.getShowTutorial() == true) {
+			tutorial.setVisibility(View.VISIBLE);
+		}
+		
+		
 		// 흰색 이미지
 		whiteScreen = (LinearLayout) findViewById(R.id.whiteScreen);
 
@@ -623,6 +628,7 @@ public class AC_Main extends Activity {
 			// 튜토리얼
 			case R.id.tutorial:
 				v.setVisibility(View.INVISIBLE);
+				mSharedPreference.setShowTutorial(false);
 				sendBroadcast(new Intent()
 						.setAction(Service_Cliq.ACTION_GET_THREADHOLD_POWER));
 				isShowSoundPowerBar = false;
@@ -660,8 +666,8 @@ public class AC_Main extends Activity {
 					intent = new Intent(Intent.ACTION_VIEW, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 					startActivityForResult(intent, ACTIVITY_GALLARY);
 					 */
-					sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
-							Uri.parse("file://" + getFilesDir())));
+					/*sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
+							Uri.parse("file://" + getFilesDir())));*/
 					Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 					String targetDir = Environment
 							.getExternalStorageDirectory().toString()
@@ -843,7 +849,8 @@ public class AC_Main extends Activity {
 
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
 			if (isTutorialShow == true) {
-				tutorial.setVisibility(View.GONE);
+				tutorial.setVisibility(View.INVISIBLE);
+				mSharedPreference.setShowTutorial(false);
 				isTutorialShow = false;
 				return false;
 			} else {
@@ -1293,6 +1300,7 @@ public class AC_Main extends Activity {
 	/**
 	 * 갤러리 버튼의 썸네일을 업데이트 한다.
 	 */
+	//TODO
 	private void updateThumbnail() {
 		String[] proj = { MediaStore.Images.Media._ID,
 				MediaStore.Images.Media.DATA,
@@ -1311,8 +1319,7 @@ public class AC_Main extends Activity {
 
 		Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 		String targetDir = Environment
-				.getExternalStorageDirectory().toString()
-				+ "/DCIM/Camera"; // 특정 경로!!
+				.getExternalStorageDirectory().toString()+"/DCIM/Camera"; // 특정 경로!!
 		uri = uri
 				.buildUpon()
 				.appendQueryParameter(
@@ -1322,6 +1329,7 @@ public class AC_Main extends Activity {
 		
 		Cursor imageCursor = getContentResolver().query(uri, proj, "bucket_display_name='CAMERA'", null, MediaStore.Images.Media.DATE_TAKEN + " DESC");
 		
+		try {
 		//만약 갤러리에 사진이 없을 경우
 		if(imageCursor.getCount() == 0) {
 			isGalleryEmpty = true;
@@ -1358,6 +1366,9 @@ public class AC_Main extends Activity {
 				}
 			}
 
+		}
+		} catch (Exception e) {
+			Log.e(TAG, "ERROR:"+e.getLocalizedMessage());
 		}
 	}
 
@@ -1453,6 +1464,12 @@ public class AC_Main extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 
+		Log.e("VJV", "visible:"+tutorial.getVisibility());
+		if(resultCode == 2) {
+			tutorial.setVisibility(View.VISIBLE);
+			Log.e("VJV", "visible:"+tutorial.getVisibility());
+		}
+		
 		// Bundle extras = data.getExtras();
 		switch (requestCode) {
 		case ACTIVITY_SETTING:

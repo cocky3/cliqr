@@ -113,6 +113,7 @@ public class AC_Dialog_CLIQr_Register extends Activity {
 	}
 
 	protected void apply() {
+		Log.e("CC", "FFF:"+final_CLIQr_freq);
 		mPref.setCliqFrequency(final_CLIQr_freq);
 	}
 
@@ -138,6 +139,7 @@ public class AC_Dialog_CLIQr_Register extends Activity {
 		img_cliqr.setImageDrawable(getResources().getDrawable(R.drawable.cliqr_regist_1));
 		
 		boolean isCountAdded = false;
+		
 		for (int i=0; i < listFrequency.size(); i++) {
 			if(listFrequency.get(i).getFrequency() == CLIQr_Freq) {
 				listFrequency.get(i).addCount();

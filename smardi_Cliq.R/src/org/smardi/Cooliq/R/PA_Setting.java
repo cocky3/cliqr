@@ -4,6 +4,8 @@ import org.smardi.CliqService.*;
 
 import android.content.*;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.graphics.*;
+import android.graphics.drawable.*;
 import android.hardware.Camera.Size;
 import android.os.*;
 import android.preference.*;
@@ -39,6 +41,7 @@ public class PA_Setting extends PreferenceActivity {
 	private final String KEY_CAMERA_PICTURESIZE_FRONT = "org.smardi.cliq.picturesize.front";
 	
 	private final String KEY_TUTORIAL = "org.smardi.cliq.tutorial";
+	private final String KEY_ExplainComponent = "org.smardi.cliq.explainComponent";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +57,13 @@ public class PA_Setting extends PreferenceActivity {
 		getPreferenceScreen().getSharedPreferences()
 				.registerOnSharedPreferenceChangeListener(
 						onSharedChangeListener);
+		
+		
+		getWindow().setBackgroundDrawable(new ColorDrawable(Color.argb(0x66, 0x00, 0x00, 0x00)));
+		getWindow().setLayout(getWindowManager().getDefaultDisplay().getWidth()*3/5, getWindowManager().getDefaultDisplay().getHeight()*4/5);
 	}
+	
+	
 
 	private PreferenceScreen createPreferenceHierarchy() {
 
@@ -64,234 +73,241 @@ public class PA_Setting extends PreferenceActivity {
 
 		// CLIQ.r 주파수 등록
 
-		// Inline preferences
-		PreferenceCategory CliqPrefCat = new PreferenceCategory(this);
-		CliqPrefCat.setTitle(getString(R.string.setting_category_1st_title));
-		root.addPreference(CliqPrefCat);
-
-		// CLIQ.r 주파수 등록 dialog 띄우기
-		Preference preference_CLIQ_regist = new Preference(this);
-		preference_CLIQ_regist.setKey(KEY_CLIQ_REGIST);
-		preference_CLIQ_regist
-				.setTitle(getString(R.string.setting_registration_title));
-		preference_CLIQ_regist
-				.setSummary(getString(R.string.setting_registration_content));
-		preference_CLIQ_regist
-				.setOnPreferenceClickListener(onPreferenceClickListener);
-		CliqPrefCat.addPreference(preference_CLIQ_regist);
-
-		// CLIQ.r 등록 확인 테스트 dialog 띄우기
-		Preference preference_CLIQ_test = new Preference(this);
-		preference_CLIQ_test.setKey(KEY_CLIQ_TEST);
-		preference_CLIQ_test
-				.setTitle(getString(R.string.setting_communication_test_title));
-		preference_CLIQ_test
-				.setSummary(getString(R.string.setting_communication_test_content));
-		preference_CLIQ_test
-				.setOnPreferenceClickListener(onPreferenceClickListener);
-		CliqPrefCat.addPreference(preference_CLIQ_test);
-
-		// CLIQ.r 수신감도 Preference
-		SeekBarPreference preference_CLIQ_sensitivity = new SeekBarPreference(
-				this, null);
-		preference_CLIQ_sensitivity.setKey(KEY_CLIQ_SENSITIVITY);
-		preference_CLIQ_sensitivity
-				.setTitle(getString(R.string.setting_change_sensitivity_title));
-		preference_CLIQ_sensitivity
-				.setSummary(getString(R.string.setting_change_sensitivity_content));
-		CliqPrefCat.addPreference(preference_CLIQ_sensitivity);
-
-		// --------------------------------------------------------
-		// Camera 설정
-		PreferenceCategory cameraPrefCat = new PreferenceCategory(this);
-		cameraPrefCat.setTitle(getString(R.string.setting_category_2nd_title));
-		root.addPreference(cameraPrefCat);
-
-		//사진 해상도 설정++++++++
-		if (mCameraPref.getWhichCamera() == Surface_Picture_Preview.CAMERA_BACK) {
-			// Back 사진 크기
-			int width = mCameraPref.getPictureSizes_BACK()[0];
-			int height = mCameraPref.getPictureSizes_BACK()[1];
-			String pixel = String.format("%.1f", Math.round(width*height/100000f)/10f);
-			String currentBackSize = width+ " x " + height + " ("+pixel+"M)";
+		for (int menuIdx = 0; menuIdx < 2; menuIdx++) {
+			if((mCliqPref.getCliqFrequency() == 0 && menuIdx == 0) || (0 < mCliqPref.getCliqFrequency() && menuIdx == 1)) {
+				
+				// Inline preferences
+				PreferenceCategory CliqPrefCat = new PreferenceCategory(this);
+				CliqPrefCat.setTitle(getString(R.string.setting_category_1st_title));
+				root.addPreference(CliqPrefCat);
+		
+				// CLIQ.r 주파수 등록 dialog 띄우기
+				Preference preference_CLIQ_regist = new Preference(this);
+				preference_CLIQ_regist.setKey(KEY_CLIQ_REGIST);
+				preference_CLIQ_regist
+						.setTitle(getString(R.string.setting_registration_title));
+				preference_CLIQ_regist
+						.setSummary(getString(R.string.setting_registration_content));
+				preference_CLIQ_regist
+						.setOnPreferenceClickListener(onPreferenceClickListener);
+				CliqPrefCat.addPreference(preference_CLIQ_regist);
+		
+				// CLIQ.r 등록 확인 테스트 dialog 띄우기
+				Preference preference_CLIQ_test = new Preference(this);
+				preference_CLIQ_test.setKey(KEY_CLIQ_TEST);
+				preference_CLIQ_test
+						.setTitle(getString(R.string.setting_communication_test_title));
+				preference_CLIQ_test
+						.setSummary(getString(R.string.setting_communication_test_content));
+				preference_CLIQ_test
+						.setOnPreferenceClickListener(onPreferenceClickListener);
+				CliqPrefCat.addPreference(preference_CLIQ_test);
+		
+				// CLIQ.r 수신감도 Preference
+				SeekBarPreference preference_CLIQ_sensitivity = new SeekBarPreference(
+						this, null);
+				preference_CLIQ_sensitivity.setKey(KEY_CLIQ_SENSITIVITY);
+				preference_CLIQ_sensitivity
+						.setTitle(getString(R.string.setting_change_sensitivity_title));
+				preference_CLIQ_sensitivity
+						.setSummary(getString(R.string.setting_change_sensitivity_content));
+				CliqPrefCat.addPreference(preference_CLIQ_sensitivity);
+		
+				
+			}
 			
-			list_Camera_PictureSize_BACK = new ListPreference(this);
-			list_Camera_PictureSize_BACK.setKey(KEY_CAMERA_PICTURESIZE_BACK);
-			list_Camera_PictureSize_BACK.setEntries(mCameraPref
-					.getPictureSizeBackList());
-			list_Camera_PictureSize_BACK.setEntryValues(mCameraPref
-					.getPictureSizeBackList());
-			list_Camera_PictureSize_BACK
-					.setDialogTitle(getString(R.string.setting_rear_resolution_title));
-			list_Camera_PictureSize_BACK
-					.setTitle(getString(R.string.setting_rear_resolution_title));
-			list_Camera_PictureSize_BACK.setSummary(currentBackSize);
-			cameraPrefCat.addPreference(list_Camera_PictureSize_BACK);
-		} else {
-			// Front 사진 크기
-			String currentFrontSize = mCameraPref.getPictureSizes_FRONT()[0]
-					+ " x " + mCameraPref.getPictureSizes_FRONT()[1];
-			list_Camera_PictureSize_FRONT = new ListPreference(this);
-			list_Camera_PictureSize_FRONT.setKey(KEY_CAMERA_PICTURESIZE_FRONT);
-			list_Camera_PictureSize_FRONT.setEntries(mCameraPref
-					.getPictureSizeFrontList());
-			list_Camera_PictureSize_FRONT.setEntryValues(mCameraPref
-					.getPictureSizeFrontList());
-			list_Camera_PictureSize_FRONT
-					.setDialogTitle(getString(R.string.setting_front_resolution_title));
-			list_Camera_PictureSize_FRONT
-					.setTitle(getString(R.string.setting_front_resolution_title));
-			list_Camera_PictureSize_FRONT.setSummary(currentFrontSize);
-			cameraPrefCat.addPreference(list_Camera_PictureSize_FRONT);
-		}
+			if(menuIdx == 0) {
+				// --------------------------------------------------------
+				// Camera 설정
+				PreferenceCategory cameraPrefCat = new PreferenceCategory(this);
+				cameraPrefCat.setTitle(getString(R.string.setting_category_2nd_title));
+				root.addPreference(cameraPrefCat);
 		
-		
-		// 컬러이팩트++++++++
-		list_Camera_ColorEffect = new ListPreference(this);
-		list_Camera_ColorEffect.setKey(KEY_CAMERA_COLOREFFECT);
-
-		// 컬러이팩트를 한글로 바꾼다
-		String[] translatedColorEffectList = mCameraPref.getColorEffectList();
-		String[] colorEffect_en = getResources().getStringArray(
-				R.array.colorEffect_en);
-		String[] colorEffect_ko = getResources().getStringArray(
-				R.array.colorEffect_ko);
-
-		for (int i = 0; i < translatedColorEffectList.length; i++) {
-			for (int j = 0; j < colorEffect_en.length; j++) {
-				if (translatedColorEffectList[i].equals(colorEffect_en[j]) == true) {
-					translatedColorEffectList[i] = colorEffect_ko[j];
-					break;
+				//사진 해상도 설정++++++++
+				if (mCameraPref.getWhichCamera() == Surface_Picture_Preview.CAMERA_BACK) {
+					// Back 사진 크기
+					int width = mCameraPref.getPictureSizes_BACK()[0];
+					int height = mCameraPref.getPictureSizes_BACK()[1];
+					String pixel = String.format("%.1f", Math.round(width*height/100000f)/10f);
+					String currentBackSize = width+ " x " + height + " ("+pixel+"M)";
+					
+					list_Camera_PictureSize_BACK = new ListPreference(this);
+					list_Camera_PictureSize_BACK.setKey(KEY_CAMERA_PICTURESIZE_BACK);
+					list_Camera_PictureSize_BACK.setEntries(mCameraPref
+							.getPictureSizeBackList());
+					list_Camera_PictureSize_BACK.setEntryValues(mCameraPref
+							.getPictureSizeBackList());
+					list_Camera_PictureSize_BACK
+							.setDialogTitle(getString(R.string.setting_rear_resolution_title));
+					list_Camera_PictureSize_BACK
+							.setTitle(getString(R.string.setting_rear_resolution_title));
+					list_Camera_PictureSize_BACK.setSummary(currentBackSize);
+					cameraPrefCat.addPreference(list_Camera_PictureSize_BACK);
+				} else {
+					// Front 사진 크기
+					String currentFrontSize = mCameraPref.getPictureSizes_FRONT()[0]
+							+ " x " + mCameraPref.getPictureSizes_FRONT()[1];
+					list_Camera_PictureSize_FRONT = new ListPreference(this);
+					list_Camera_PictureSize_FRONT.setKey(KEY_CAMERA_PICTURESIZE_FRONT);
+					list_Camera_PictureSize_FRONT.setEntries(mCameraPref
+							.getPictureSizeFrontList());
+					list_Camera_PictureSize_FRONT.setEntryValues(mCameraPref
+							.getPictureSizeFrontList());
+					list_Camera_PictureSize_FRONT
+							.setDialogTitle(getString(R.string.setting_front_resolution_title));
+					list_Camera_PictureSize_FRONT
+							.setTitle(getString(R.string.setting_front_resolution_title));
+					list_Camera_PictureSize_FRONT.setSummary(currentFrontSize);
+					cameraPrefCat.addPreference(list_Camera_PictureSize_FRONT);
 				}
+				
+				
+				// 컬러이팩트++++++++
+				list_Camera_ColorEffect = new ListPreference(this);
+				list_Camera_ColorEffect.setKey(KEY_CAMERA_COLOREFFECT);
+		
+				// 컬러이팩트를 한글로 바꾼다
+				String[] translatedColorEffectList = mCameraPref.getColorEffectList();
+				String[] colorEffect_en = getResources().getStringArray(
+						R.array.colorEffect_en);
+				String[] colorEffect_ko = getResources().getStringArray(
+						R.array.colorEffect_ko);
+		
+				for (int i = 0; i < translatedColorEffectList.length; i++) {
+					for (int j = 0; j < colorEffect_en.length; j++) {
+						if (translatedColorEffectList[i].equals(colorEffect_en[j]) == true) {
+							translatedColorEffectList[i] = colorEffect_ko[j];
+							break;
+						}
+					}
+				}
+				
+				if(getString(R.string.language).equals("ko")== true) {
+					list_Camera_ColorEffect.setEntries(translatedColorEffectList);
+				} else {
+					list_Camera_ColorEffect.setEntries(mCameraPref.getColorEffectList());
+				}
+				list_Camera_ColorEffect
+						.setEntryValues(mCameraPref.getColorEffectList());
+				list_Camera_ColorEffect
+						.setDialogTitle(getString(R.string.setting_color_effect_title));
+				list_Camera_ColorEffect
+						.setTitle(getString(R.string.setting_color_effect_title));
+		
+				String summaryColorEffect = mCameraPref.getColorEffect();
+				if(getString(R.string.language).equals("ko")== true) {
+					summaryColorEffect = translateColorEffet(summaryColorEffect);
+				}
+		
+				list_Camera_ColorEffect.setSummary(summaryColorEffect);
+				cameraPrefCat.addPreference(list_Camera_ColorEffect);
+		
+				//장면 모드가 Auto가 아니면 화이트벨런스를 disable 한다.
+				if(mCameraPref.getSceneMode().toLowerCase().equals("auto")) {
+					list_Camera_ColorEffect.setEnabled(true);
+				} else {
+					list_Camera_ColorEffect.setEnabled(false);
+				}
+				
+				
+				// 화이트 벨런스++++++++
+				list_Camera_WhiteBalance = new ListPreference(this);
+				list_Camera_WhiteBalance.setKey(KEY_CAMERA_WHITEBALANCE);
+		
+				// 화이트 벨런스를 한글로 바꾼다
+				String[] translatedWhiteBalanceList = mCameraPref.getWhiteBalanceList();
+				String[] whiteBalance_en = getResources().getStringArray(
+						R.array.whiteBalance_en);
+				String[] whiteBalance_ko = getResources().getStringArray(
+						R.array.whiteBalance_ko);
+		
+				for (int i = 0; i < translatedWhiteBalanceList.length; i++) {
+					for (int j = 0; j < whiteBalance_en.length; j++) {
+						if (translatedWhiteBalanceList[i].equals(whiteBalance_en[j]) == true) {
+							translatedWhiteBalanceList[i] = whiteBalance_ko[j];
+							break;
+						}
+					}
+				}
+				
+				if(getString(R.string.language).equals("ko")== true) {
+					list_Camera_WhiteBalance.setEntries(translatedWhiteBalanceList);
+				} else {
+					list_Camera_WhiteBalance.setEntries(mCameraPref
+							.getWhiteBalanceList());
+				}
+				
+				list_Camera_WhiteBalance.setEntryValues(mCameraPref
+						.getWhiteBalanceList());
+				list_Camera_WhiteBalance
+						.setDialogTitle(getString(R.string.setting_white_balance_title));
+				list_Camera_WhiteBalance
+						.setTitle(getString(R.string.setting_white_balance_title));
+		
+				String summaryWhiteBalance = mCameraPref.getWhiteBalance();
+				
+				if(getString(R.string.language).equals("ko")== true) {
+					summaryWhiteBalance = translateWhiteBalance(summaryWhiteBalance);
+				}
+		
+				list_Camera_WhiteBalance.setSummary(summaryWhiteBalance);
+				cameraPrefCat.addPreference(list_Camera_WhiteBalance);
+		
+				//장면 모드가 Auto가 아니면 화이트벨런스를 disable 한다.
+				if(mCameraPref.getSceneMode().toLowerCase().equals("auto")) {
+					list_Camera_WhiteBalance.setEnabled(true);
+				} else {
+					list_Camera_WhiteBalance.setEnabled(false);
+				}
+				
+				
+				
+				
+				
+				
+				
+				// 카메라 장면모드++++++++
+				list_Camera_SceneMode = new ListPreference(this);
+				list_Camera_SceneMode.setKey(KEY_CAMERA_SCENEMODE);
+		
+				// 모드를 한글로 바꾼다
+				String[] translatedSceneModeList = mCameraPref.getSceneModeList();
+				String[] sceneMode_en = getResources().getStringArray(
+						R.array.sceneMode_en);
+				String[] sceneMode_ko = getResources().getStringArray(
+						R.array.sceneMode_ko);
+		
+				for (int i = 0; i < translatedSceneModeList.length; i++) {
+					for (int j = 0; j < sceneMode_en.length; j++) {
+						if (translatedSceneModeList[i].equals(sceneMode_en[j]) == true) {
+							translatedSceneModeList[i] = sceneMode_ko[j];
+							break;
+						}
+					}
+				}
+				
+				if(getString(R.string.language).equals("ko")== true) {
+					list_Camera_SceneMode.setEntries(translatedSceneModeList);
+				} else {
+					mCameraPref.getSceneModeList();
+				}
+				
+				list_Camera_SceneMode.setEntryValues(mCameraPref.getSceneModeList());
+				list_Camera_SceneMode
+						.setDialogTitle(getString(R.string.setting_scene_mode_title));
+				list_Camera_SceneMode
+						.setTitle(getString(R.string.setting_scene_mode_title));
+		
+				String summarySceneMode = mCameraPref.getSceneMode();
+				
+				if(getString(R.string.language).equals("ko")== true) {
+					summarySceneMode = translateSceneMode(summarySceneMode);
+				}
+		
+				list_Camera_SceneMode.setSummary(summarySceneMode);
+				cameraPrefCat.addPreference(list_Camera_SceneMode);
 			}
 		}
-		
-		if(getString(R.string.language).equals("ko")== true) {
-			list_Camera_ColorEffect.setEntries(translatedColorEffectList);
-		} else {
-			list_Camera_ColorEffect.setEntries(mCameraPref.getColorEffectList());
-		}
-		list_Camera_ColorEffect
-				.setEntryValues(mCameraPref.getColorEffectList());
-		list_Camera_ColorEffect
-				.setDialogTitle(getString(R.string.setting_color_effect_title));
-		list_Camera_ColorEffect
-				.setTitle(getString(R.string.setting_color_effect_title));
-
-		String summaryColorEffect = mCameraPref.getColorEffect();
-		if(getString(R.string.language).equals("ko")== true) {
-			summaryColorEffect = translateColorEffet(summaryColorEffect);
-		}
-
-		list_Camera_ColorEffect.setSummary(summaryColorEffect);
-		cameraPrefCat.addPreference(list_Camera_ColorEffect);
-
-		//장면 모드가 Auto가 아니면 화이트벨런스를 disable 한다.
-		if(mCameraPref.getSceneMode().toLowerCase().equals("auto")) {
-			list_Camera_ColorEffect.setEnabled(true);
-		} else {
-			list_Camera_ColorEffect.setEnabled(false);
-		}
-		
-		
-		// 화이트 벨런스++++++++
-		list_Camera_WhiteBalance = new ListPreference(this);
-		list_Camera_WhiteBalance.setKey(KEY_CAMERA_WHITEBALANCE);
-
-		// 화이트 벨런스를 한글로 바꾼다
-		String[] translatedWhiteBalanceList = mCameraPref.getWhiteBalanceList();
-		String[] whiteBalance_en = getResources().getStringArray(
-				R.array.whiteBalance_en);
-		String[] whiteBalance_ko = getResources().getStringArray(
-				R.array.whiteBalance_ko);
-
-		for (int i = 0; i < translatedWhiteBalanceList.length; i++) {
-			for (int j = 0; j < whiteBalance_en.length; j++) {
-				if (translatedWhiteBalanceList[i].equals(whiteBalance_en[j]) == true) {
-					translatedWhiteBalanceList[i] = whiteBalance_ko[j];
-					break;
-				}
-			}
-		}
-		
-		if(getString(R.string.language).equals("ko")== true) {
-			list_Camera_WhiteBalance.setEntries(translatedWhiteBalanceList);
-		} else {
-			list_Camera_WhiteBalance.setEntries(mCameraPref
-					.getWhiteBalanceList());
-		}
-		
-		list_Camera_WhiteBalance.setEntryValues(mCameraPref
-				.getWhiteBalanceList());
-		list_Camera_WhiteBalance
-				.setDialogTitle(getString(R.string.setting_white_balance_title));
-		list_Camera_WhiteBalance
-				.setTitle(getString(R.string.setting_white_balance_title));
-
-		String summaryWhiteBalance = mCameraPref.getWhiteBalance();
-		
-		if(getString(R.string.language).equals("ko")== true) {
-			summaryWhiteBalance = translateWhiteBalance(summaryWhiteBalance);
-		}
-
-		list_Camera_WhiteBalance.setSummary(summaryWhiteBalance);
-		cameraPrefCat.addPreference(list_Camera_WhiteBalance);
-
-		//장면 모드가 Auto가 아니면 화이트벨런스를 disable 한다.
-		if(mCameraPref.getSceneMode().toLowerCase().equals("auto")) {
-			list_Camera_WhiteBalance.setEnabled(true);
-		} else {
-			list_Camera_WhiteBalance.setEnabled(false);
-		}
-		
-		
-		
-		
-		
-		
-		
-		// 카메라 장면모드++++++++
-		list_Camera_SceneMode = new ListPreference(this);
-		list_Camera_SceneMode.setKey(KEY_CAMERA_SCENEMODE);
-
-		// 모드를 한글로 바꾼다
-		String[] translatedSceneModeList = mCameraPref.getSceneModeList();
-		String[] sceneMode_en = getResources().getStringArray(
-				R.array.sceneMode_en);
-		String[] sceneMode_ko = getResources().getStringArray(
-				R.array.sceneMode_ko);
-
-		for (int i = 0; i < translatedSceneModeList.length; i++) {
-			for (int j = 0; j < sceneMode_en.length; j++) {
-				if (translatedSceneModeList[i].equals(sceneMode_en[j]) == true) {
-					translatedSceneModeList[i] = sceneMode_ko[j];
-					break;
-				}
-			}
-		}
-		
-		if(getString(R.string.language).equals("ko")== true) {
-			list_Camera_SceneMode.setEntries(translatedSceneModeList);
-		} else {
-			mCameraPref.getSceneModeList();
-		}
-		
-		list_Camera_SceneMode.setEntryValues(mCameraPref.getSceneModeList());
-		list_Camera_SceneMode
-				.setDialogTitle(getString(R.string.setting_scene_mode_title));
-		list_Camera_SceneMode
-				.setTitle(getString(R.string.setting_scene_mode_title));
-
-		String summarySceneMode = mCameraPref.getSceneMode();
-		
-		if(getString(R.string.language).equals("ko")== true) {
-			summarySceneMode = translateSceneMode(summarySceneMode);
-		}
-
-		list_Camera_SceneMode.setSummary(summarySceneMode);
-		cameraPrefCat.addPreference(list_Camera_SceneMode);
-
-		
 		
 		
 		
@@ -303,7 +319,7 @@ public class PA_Setting extends PreferenceActivity {
 		HelpCat.setTitle(getString(R.string.setting_category_help));
 		root.addPreference(HelpCat);
 		
-		// CLIQ.r 주파수 등록 dialog 띄우기
+		// 튜토리얼
 		Preference preference_Tutorial = new Preference(this);
 		preference_Tutorial.setKey(KEY_TUTORIAL);
 		preference_Tutorial
@@ -313,6 +329,18 @@ public class PA_Setting extends PreferenceActivity {
 		preference_Tutorial
 				.setOnPreferenceClickListener(onPreferenceClickListener);
 		HelpCat.addPreference(preference_Tutorial);
+		
+		
+		//화면 구성 보기
+		Preference preference_ExplainComponent = new Preference(this);
+		preference_ExplainComponent.setKey(KEY_ExplainComponent);
+		preference_ExplainComponent
+				.setTitle(getString(R.string.setting_title_explain_component));
+		preference_ExplainComponent
+				.setSummary(getString(R.string.setting_content_explain_component));
+		preference_ExplainComponent
+				.setOnPreferenceClickListener(onPreferenceClickListener);
+		HelpCat.addPreference(preference_ExplainComponent);
 		
 		/*
 		 * // Edit text preference EditTextPreference editTextPref = new
@@ -399,6 +427,13 @@ public class PA_Setting extends PreferenceActivity {
 				}
 			} else if(key.equals(KEY_TUTORIAL)) {
 				startActivity(new Intent(PA_Setting.this, AC_Help_tutorial.class));
+			}
+			
+			else if(key.equals(KEY_ExplainComponent)) {
+				Intent intent = new Intent();
+				intent.putExtra("tutorial", true);
+				PA_Setting.this.setResult(2, intent);
+				PA_Setting.this.finish();
 			}
 			return false;
 		}

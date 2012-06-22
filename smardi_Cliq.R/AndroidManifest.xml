@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.smardi.Cooliq.R"
-    android:versionCode="18"
-    android:versionName="1.28" >
+    android:versionCode="21"
+    android:versionName="1.31" >
 
     <uses-sdk android:minSdkVersion="10" />
 
@@ -48,7 +48,7 @@
             android:label="@string/setting_title"
             android:name="PA_Setting"
             android:screenOrientation="landscape"
-            android:theme="@android:style/Theme.Dialog" >
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
         </activity>
         <activity
             android:name="AC_Help_tutorial"

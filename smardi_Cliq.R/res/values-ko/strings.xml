@@ -49,6 +49,8 @@
     <string name="setting_change_sensitivity_title">민감도 설정</string>
     <string name="setting_title_tutorial">튜토리얼</string>
     <string name="setting_content_tutorial">튜토리얼을 확인합니다.</string>
+    <string name="setting_title_explain_component">화면 구성 확인</string>
+    <string name="setting_content_explain_component">CLIQ.r의 화면 구성을 확인합니다.</string>
     <string name="setting_registration_content">CLIQ.r의 신호를 등록합니다.</string>
     <string name="setting_communication_test_content">CLIQ.r과의 연결을 테스트합니다.</string>
     <string name="setting_change_sensitivity_content">CLIQ.r의 신호를 인식하는 민감도를 설정합니다.</string>
@@ -63,6 +65,7 @@
 	
     <string name="dialog_tutorial_title">튜토리얼 종료</string>
     <string name="dialog_tutorial_message">튜토리얼을 마치시겠습니까?</string>
+    
     
     <string name="dialog_Delete">삭제</string>
     <string name="dialog_OK">확인</string>

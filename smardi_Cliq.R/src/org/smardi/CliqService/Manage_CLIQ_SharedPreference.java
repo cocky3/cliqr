@@ -67,4 +67,13 @@ public class Manage_CLIQ_SharedPreference {
 	public int getCliqSensitivity () {
 		return mPref.getInt("CliqSensitivity", 40);
 	}
+	
+	
+	public void setShowTutorial(boolean show) {
+		mEditor.putBoolean("tutorialShow", show);
+		mEditor.commit();
+	}
+	public boolean getShowTutorial() {
+		return mPref.getBoolean("tutorialShow", true);
+	}
 }
