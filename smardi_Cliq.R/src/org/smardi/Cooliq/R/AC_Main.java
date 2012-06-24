@@ -94,7 +94,8 @@ public class AC_Main extends Activity {
 	private final int WHAT_REMAIN_TIME = 3;
 	private final int WHAT_SOUND_GAGE_MOVE = 4;
 	private final int WHAT_CLEAN_SCREEN = 5;
-
+	private final int WHAT_CHANGE_SCREEN_RATIO = 6;
+	
 	// Constant
 	private final int TIME_SHORTCLICK = 0;
 	private final int TIME_LONGCLICK = 700; // 롱클릭으로 인지하는데 걸리는 시간(ms)
@@ -178,6 +179,12 @@ public class AC_Main extends Activity {
 	//카메라 파라미터
 	public static Camera.Parameters params = null;
 
+	
+	//프리뷰 해상도 설정 시 실패 했을 때
+	private boolean retrySetPreviewSize = false;
+	private long time_SetPreviewSizeFailed = 0;
+	
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -377,118 +384,98 @@ public class AC_Main extends Activity {
 		btn_shutter.setImageDrawable(getResources().getDrawable(
 				R.drawable.c_shutter));
 
+		params = mSurface.mCamera.getParameters();
+
+		// 플래시 모드가 같은지 확인, 없으면 처음 것 적용
+
 		try {
-			params = mSurface.mCamera.getParameters();
-
-			// 플래시 모드가 같은지 확인, 없으면 처음 것 적용
-
-			try {
-				if (mCameraParametes.getFlashMode() == null) {
-					mCameraPref.setFlashMode("off");
-				}
-
-				if (mCameraParametes.getFlashMode().indexOf(
-						mCameraPref.getFlashMode()) < 0) {
-					if (whichCamera == mSurface.CAMERA_FACE) {
-						mCameraPref.setFlashMode(mCameraParametes
-								.getFlashMode().get(0));
-					} else {
-						mCameraPref.setFlashMode("auto");
-					}
-				}
-			} catch (Exception e) {
-				/*
-				 * Log.e(TAG, "mCameraParametes.getFlashMode() == null:"+
-				 * (mCameraParametes.getFlashMode() == null)); Log.e(TAG,
-				 * "mCameraParametes.getFlashMode().size():"
-				 * +mCameraParametes.getFlashMode().size());
-				 * 
-				 * for(int i=0; i<mCameraParametes.getFlashMode().size(); i++) {
-				 * Log.e(TAG,
-				 * "mCameraParametes.getFlashMode().get("+i+"):"+mCameraParametes
-				 * .getFlashMode().get(i)); }
-				 * 
-				 * Log.e(TAG,
-				 * "mCameraPref.setFlashMode():"+mCameraPref.getFlashMode());
-				 */
-				Log.e(TAG, "mCameraParametes.getFlashMode()");
-				Log.e(TAG, "mCameraPref == null :" + (mCameraPref == null));
-				Log.e(TAG, "mCameraPref.getFlashMode() == null :"
-						+ (mCameraPref.getFlashMode() == null));
-				Log.e(TAG, "Error:" + e.getLocalizedMessage());
-
-				return;
-			}
-
-			try {
-				// 초점 모드가 있는지 확인, 없으면 처음 것 적용
-				if (mCameraParametes.getFocusMode().indexOf(
-						mCameraPref.getFocusMode()) < 0) {
-					mCameraPref.setFocusMode(mCameraParametes.getFocusMode()
-							.get(0));
-				}
-			} catch (Exception e) {
-				if (whichCamera == mSurface.CAMERA_FACE) {
-					mCameraPref.setFocusMode("off");
-					Log.e(TAG, "mCameraPref.setFocusMode(\"off\");");
-				} else {
-					mCameraPref.setFocusMode("auto");
-					Log.e(TAG, "mCameraPref.setFocusMode(\"auto\");");
-				}
-
-				Log.e(TAG, "Error:" + e.getLocalizedMessage());
-				return;
-			}
-
-			// 사진 크기가 있는지 확인, 없으면 처음 것 적용
-			/*
-			 * if(whichCamera == mSurface.CAMERA_BACK) {
-			 * mCameraPref.setPictureSizes
-			 * (mCameraPref.getPictureSizes_BACK()[0],
-			 * mCameraPref.getPictureSizes_BACK()[1]); } else {
-			 * mCameraPref.setPictureSizes
-			 * (mCameraPref.getPictureSizes_FRONT()[0],
-			 * mCameraPref.getPictureSizes_FRONT()[1]); }
-			 */
-
-			if (whichCamera == mSurface.CAMERA_BACK) {
-				mCameraPref.setFocusMode("auto");
-				mCameraPref.setFlashMode("auto");
-				// isSetCameraParameters = true;
-			} else {
-				mCameraPref.setFocusMode("infinity");
+			if (mCameraParametes.getFlashMode() == null) {
 				mCameraPref.setFlashMode("off");
+			} else if (mCameraParametes.getFlashMode().indexOf(
+					mCameraPref.getFlashMode()) < 0) {
+				
+				if (whichCamera == Surface_Picture_Preview.CAMERA_FACE) {
+					mCameraPref.setFlashMode("off");
+				} else {
+					mCameraPref.setFlashMode("auto");
+				}
 			}
-
-			if (whichCamera == mSurface.CAMERA_BACK) {
-				params.setFlashMode(mCameraPref.getFlashMode());
-				params.setFocusMode(mCameraPref.getFocusMode());
-			}
-			params.setColorEffect(mCameraPref.getColorEffect());
-			params.setSceneMode(mCameraPref.getSceneMode());
-			params.setJpegQuality(100);
-			params.setWhiteBalance(mCameraPref.getWhiteBalance());
-			int[] pictureSize = new int[2];
-			if (whichCamera == mSurface.CAMERA_BACK) {
-				pictureSize = mCameraPref.getPictureSizes_BACK();
-			} else {
-				pictureSize = mCameraPref.getPictureSizes_FRONT();
-			}
-
-			params.setPictureSize(pictureSize[0], pictureSize[1]);
-			if (D) {
-				Log.i("smardi.Cliq", whichCamera + " width:" + pictureSize[0]
-						+ " height:" + pictureSize[1]);
-			}
-			mSurface.mCamera.setParameters(params);
-
-			changePreviewRatio();
-
 		} catch (Exception e) {
-			Log.e(TAG, "Error in initCameraBySharedPreference:" + e.getLocalizedMessage());
-			Log.v(TAG, "Error in initCameraBySharedPreference:" + e.getLocalizedMessage());
-			Log.i(TAG, "Error in initCameraBySharedPreference:" + e.getLocalizedMessage());
+			
+			Log.e(TAG, "mCameraPref == null :" + (mCameraPref == null));
+			Log.e(TAG, "mCameraParametes.getFlashMode() is "+mCameraParametes.getFlashMode());
+			Log.e(TAG, "mCameraPref.getFlashMode() == null :"
+					+ (mCameraPref.getFlashMode() == null));
+			Log.e(TAG, "Error:" + e.getLocalizedMessage());
+			
+			return;
 		}
+
+		try {
+			// 초점 모드가 있는지 확인, 없으면 처음 것 적용
+			if (mCameraParametes.getFocusMode().indexOf(
+					mCameraPref.getFocusMode()) < 0) {
+				mCameraPref.setFocusMode(mCameraParametes.getFocusMode()
+						.get(0));
+			}
+		} catch (Exception e) {
+			if (whichCamera == Surface_Picture_Preview.CAMERA_FACE) {
+				mCameraPref.setFocusMode("off");
+				Log.e(TAG, "mCameraPref.setFocusMode(\"off\");");
+			} else {
+				mCameraPref.setFocusMode("auto");
+				Log.e(TAG, "mCameraPref.setFocusMode(\"auto\");");
+			}
+
+			Log.e(TAG, "Error:" + e.getLocalizedMessage());
+			return;
+		}
+
+		// 사진 크기가 있는지 확인, 없으면 처음 것 적용
+		/*
+		 * if(whichCamera == mSurface.CAMERA_BACK) {
+		 * mCameraPref.setPictureSizes
+		 * (mCameraPref.getPictureSizes_BACK()[0],
+		 * mCameraPref.getPictureSizes_BACK()[1]); } else {
+		 * mCameraPref.setPictureSizes
+		 * (mCameraPref.getPictureSizes_FRONT()[0],
+		 * mCameraPref.getPictureSizes_FRONT()[1]); }
+		 */
+
+		if (whichCamera == Surface_Picture_Preview.CAMERA_BACK) {
+			mCameraPref.setFocusMode("auto");
+			mCameraPref.setFlashMode("auto");
+			// isSetCameraParameters = true;
+		} else {
+			mCameraPref.setFocusMode("infinity");
+			mCameraPref.setFlashMode("off");
+		}
+
+		if (whichCamera == Surface_Picture_Preview.CAMERA_BACK) {
+			params.setFlashMode(mCameraPref.getFlashMode());
+			params.setFocusMode(mCameraPref.getFocusMode());
+		}
+		params.setColorEffect(mCameraPref.getColorEffect());
+		params.setSceneMode(mCameraPref.getSceneMode());
+		params.setJpegQuality(100);
+		params.setWhiteBalance(mCameraPref.getWhiteBalance());
+		int[] pictureSize = new int[2];
+		if (whichCamera == Surface_Picture_Preview.CAMERA_BACK) {
+			pictureSize = mCameraPref.getPictureSizes_BACK();
+		} else {
+			pictureSize = mCameraPref.getPictureSizes_FRONT();
+		}
+
+		params.setPictureSize(pictureSize[0], pictureSize[1]);
+		
+		if (D) {
+			Log.i("smardi.Cliq", whichCamera + " width:" + pictureSize[0]
+					+ " height:" + pictureSize[1]);
+		}
+		mSurface.mCamera.setParameters(params);
+
+		changePreviewRatio();
+
 	}
 
 	// 효과음들을 불러온다.
@@ -657,7 +644,6 @@ public class AC_Main extends Activity {
 				break;
 			case R.id.btn_gallary:
 				if(isGalleryEmpty == true) {
-					//TODO 갤러리에 이미지가 없다는 메시지 출력
 					Toast.makeText(AC_Main.this, getString(R.string.there_is_no_picture), Toast.LENGTH_SHORT).show();
 					return;
 				}
@@ -915,12 +901,20 @@ public class AC_Main extends Activity {
 						|| (300 <= mAngle && mAngle < 360)) { // 90도 회전
 					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
 							+ ExifInterface.ORIENTATION_ROTATE_90);
+					if(whichCamera == Surface_Picture_Preview.CAMERA_FACE) {
+						mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
+								+ ExifInterface.ORIENTATION_ROTATE_270);
+					}
 				} else if (60 <= mAngle && mAngle < 120) { // 180도 회전
 					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
 							+ ExifInterface.ORIENTATION_ROTATE_180);
 				} else if (120 <= mAngle && mAngle < 240) { // 270도 회전
 					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
 							+ ExifInterface.ORIENTATION_ROTATE_270);
+					if(whichCamera == Surface_Picture_Preview.CAMERA_FACE) {
+						mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
+								+ ExifInterface.ORIENTATION_ROTATE_90);
+					}
 				} else if (240 <= mAngle && mAngle < 300) { // 그대로
 					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
 							+ ExifInterface.ORIENTATION_NORMAL);
@@ -1061,7 +1055,9 @@ public class AC_Main extends Activity {
 		 * Log.e("smardi.Cliq", "screen width:" + screen_width +
 		 * " surface width:" + surface_width + " new:" + new_width);
 		 */
-		changePreviewRatio();
+		
+		initCameraBySharedPreference();
+		//changePreviewRatio();
 		/*
 		 * mSurface.setLayoutParams(new LinearLayout.LayoutParams(new_width,
 		 * LayoutParams.MATCH_PARENT));
@@ -1080,108 +1076,134 @@ public class AC_Main extends Activity {
 	 * 미리보기 해상도 비율을 조절한다.
 	 */
 	private void changePreviewRatio() {
-		Display display = ((WindowManager) getSystemService(WINDOW_SERVICE))
-				.getDefaultDisplay();
-		int screen_w = display.getWidth();
-		int screen_h = display.getHeight();
+		try {
 		
-		Size opti = null;
-		
-		Log.e("CLIQ", "Call surfaceChanged");
-
+			Display display = ((WindowManager) getSystemService(WINDOW_SERVICE))
+					.getDefaultDisplay();
+			int screen_w = display.getWidth();
+			int screen_h = display.getHeight();
+			
+			Size opti = null;
+			
+			
+			
 			List<Size> arSize = params.getSupportedPreviewSizes();
-			/*if (false) {
+			if (D) {
+				Log.e("CLIQ", "Called changePreviewRatio()");
+				Log.e("CLIQ", "Picture size:"+params.getPictureSize().width + " x "+params.getPictureSize().height);
+				
 				for (Size size : arSize) {
-					Log.i("smardi.Cliq", "preview:" + size.width + " x "
+					Log.i("CLIQ", "preview:" + size.width + " x "
 							+ size.height);
 				}
-			}*/
-
-			if (arSize == null) {
-				params.setPreviewSize(screen_w, screen_h);
-			} else {
-				int diff = 10000;
-				opti = null;
-				for (Size s : arSize) {
-					if (Math.abs(s.height - screen_w) < diff) {
-						diff = Math.abs(s.height - screen_h);
-						opti = s;
-					}
-				}
-
-				// getOptimalPreviewSize 함수를 이용해서 최적 사이즈를 구함
-				// opti = getOptimalPreviewSize(arSize, width, height);
-
-				params.setPreviewSize(opti.width, opti.height);
-
-				// -----------------------------------------------------------------
-				// params.setPreviewSize(width, height);
-
-				// -----------------------------------------------------------------
-
-				if (true) {
-					Log.e("smardi.Cliq", "opti.w:" + opti.width + " opti.h:"
-							+ opti.height);
+			}
+			
+			
+			/** 이 방법은 세로의 크기가 같은 해상도를 찾아내는 방법
+			 * 사진의 비율을 고려하지 않음
+			int diff = 10000;
+			opti = null;
+			for (Size s : arSize) {
+				if (Math.abs(s.height - screen_h) < diff) {
+					diff = Math.abs(s.height - screen_h);
+					opti = s;
 				}
 			}
+			*/
+			double ratioDiff = Double.MAX_VALUE;
+			double ratioPicture = (double)params.getPictureSize().width / (double)params.getPictureSize().height;
+			
+			mSurface.size_Params = params;
+			mSurface.size_Picture_width = params.getPictureSize().width;
+			mSurface.size_Picture_height = params.getPictureSize().height;
+			
+			for (Size s : arSize) {
+				double ratioPreview = (double)s.width / (double)s.height;
+				if (Math.abs(ratioPicture - ratioPreview) < ratioDiff) {
+					ratioDiff = Math.abs(ratioPicture - ratioPreview);
+					opti = s;
+				}
+			}
+			
+			
+			// getOptimalPreviewSize 함수를 이용해서 최적 사이즈를 구함
+			// opti = getOptimalPreviewSize(arSize, width, height);
+			
+			params.setPreviewSize(opti.width, opti.height);
+			
+			// -----------------------------------------------------------------
+			// params.setPreviewSize(width, height);
+
+			// -----------------------------------------------------------------
+			
+			if (true) {
+				Log.e("smardi.Cliq", "opti.w:" + opti.width + " opti.h:"
+						+ opti.height);
+			}
+			
 			mSurface.mCamera.setParameters(params);
 			mSurface.mCamera.startPreview();
-
+	
 			//mSurface.mCamera.setCameraParameters(params);
 			//isSetCameraParameters = true;
-
+	
 			//isLoadCameraparameterSuccese = true;
-
+	
 			// 화면이 갱신된 것을 방송으로 전달
 			//sendBroadcast(new Intent().setAction(mSurface.ACTION_SURFACE_CHANGED));
 		
 			int preview_w = 0;
 			int preview_h = 0;
-		
-/*		int[] camera_size = new int[2];
-
-		if (whichCamera == mSurface.CAMERA_FACE) {
-			camera_size = mCameraPref.getPictureSizes_FRONT();
-		} else {
-			camera_size = mCameraPref.getPictureSizes_BACK();
+			
+	/*		int[] camera_size = new int[2];
+	
+			if (whichCamera == mSurface.CAMERA_FACE) {
+				camera_size = mCameraPref.getPictureSizes_FRONT();
+			} else {
+				camera_size = mCameraPref.getPictureSizes_BACK();
+			}
+	
+			int camera_w = camera_size[0];
+			int camera_h = camera_size[1];
+	
+			int preview_w = 0;
+			int preview_h = 0;
+	
+			if ((float) camera_w / (float) camera_h > (float) screen_w
+					/ (float) screen_h) {
+				// 사진 해상도가 화면보다 가로로 더 길 때
+				preview_w = screen_w;
+				preview_h = (int) Math.round(camera_h * screen_w / camera_w);
+			} else {
+				// 사진 해상도가 화면보다 세로로 더 길 때
+				preview_h = screen_h;
+				preview_w = (int) Math.round(camera_w * screen_h / camera_h);
+			}*/
+	
+			preview_w = opti.width;
+			preview_h = opti.height;
+			
+			if(D) {
+				//Log.e("smardi.Cliq", "cw:" + camera_w + " ch:" + camera_h);
+				Log.e("smardi.Cliq", "sw:" + screen_w + " sh:" + screen_h);
+				Log.e("smardi.Cliq", "pw:" + preview_w + " ph:" + preview_h);
+			}
+	
+			LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+					preview_w, preview_h);
+			int margin_horizon = (int) Math.round((screen_w - preview_w) / 2);
+			int margin_vertical = (int) Math.round((screen_h - preview_h) / 2);
+			params.setMargins(margin_horizon, margin_vertical, margin_horizon,
+					margin_vertical);
+	
+			mSurface.setLayoutParams(params);
+	
+			params = (LayoutParams) mSurface.getLayoutParams();
+		} catch (RuntimeException e) {
+			Log.e("CLIQ", "RuntimeException in changePreviewRatio():"+e.getLocalizedMessage());
+			retrySetPreviewSize = true;
+			time_SetPreviewSizeFailed = new Date().getTime();
 		}
-
-		int camera_w = camera_size[0];
-		int camera_h = camera_size[1];
-
-		int preview_w = 0;
-		int preview_h = 0;
-
-		if ((float) camera_w / (float) camera_h > (float) screen_w
-				/ (float) screen_h) {
-			// 사진 해상도가 화면보다 가로로 더 길 때
-			preview_w = screen_w;
-			preview_h = (int) Math.round(camera_h * screen_w / camera_w);
-		} else {
-			// 사진 해상도가 화면보다 세로로 더 길 때
-			preview_h = screen_h;
-			preview_w = (int) Math.round(camera_w * screen_h / camera_h);
-		}*/
-
-		preview_w = opti.width;
-		preview_h = opti.height;
-		
-		if(true) {
-			//Log.e("smardi.Cliq", "cw:" + camera_w + " ch:" + camera_h);
-			Log.e("smardi.Cliq", "sw:" + screen_w + " sh:" + screen_h);
-			Log.e("smardi.Cliq", "pw:" + preview_w + " ph:" + preview_h);
-		}
-
-		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-				preview_w, preview_h);
-		int margin_horizon = (int) Math.round((screen_w - preview_w) / 2);
-		int margin_vertical = (int) Math.round((screen_h - preview_h) / 2);
-		params.setMargins(margin_horizon, margin_vertical, margin_horizon,
-				margin_vertical);
-
-		mSurface.setLayoutParams(params);
-
-		params = (LayoutParams) mSurface.getLayoutParams();
 	}
 
 	@SuppressWarnings("static-access")
@@ -1300,9 +1322,9 @@ public class AC_Main extends Activity {
 	/**
 	 * 갤러리 버튼의 썸네일을 업데이트 한다.
 	 */
-	//TODO
+	@SuppressWarnings("static-access")
 	private void updateThumbnail() {
-		String[] proj = { MediaStore.Images.Media._ID,
+		/*String[] proj = { MediaStore.Images.Media._ID,
 				MediaStore.Images.Media.DATA,
 				MediaStore.Images.Media.DISPLAY_NAME,
 				MediaStore.Images.Media.SIZE,
@@ -1310,12 +1332,12 @@ public class AC_Main extends Activity {
 
 		Bitmap bitmap = null;
 		
-		/*
+		
 		 * 이 방식은 DCIM 폴더 외의 이미지도 불러오므로 안씀
 		 * 
 		Cursor imageCursor = managedQuery(
 				MediaStore.Images.Media.EXTERNAL_CONTENT_URI, proj, null, null,
-				MediaStore.Images.Media.DATE_TAKEN + " DESC");*/
+				MediaStore.Images.Media.DATE_TAKEN + " DESC");
 
 		Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 		String targetDir = Environment
@@ -1328,6 +1350,39 @@ public class AC_Main extends Activity {
 								.hashCode())).build();
 		
 		Cursor imageCursor = getContentResolver().query(uri, proj, "bucket_display_name='CAMERA'", null, MediaStore.Images.Media.DATE_TAKEN + " DESC");
+		*/
+		
+		String targetDir = Environment.getExternalStorageDirectory().toString()
+				+ "/DCIM/Camera"; // 특정 경로!!
+		File list = new File(targetDir);
+		
+		//list객체에서 이미지 목록만 추려낸다.
+		String[] imgList = list.list(new FilenameFilter() {
+			long time_lastModified = 0;
+			@Override
+			public boolean accept(File dir, String filename) {
+				boolean bOK = false;
+				if(filename.toLowerCase().endsWith(".jpg")) {
+					File imgFile = new File(dir+"/"+filename);
+					if(time_lastModified < imgFile.lastModified()) {
+						bOK = true;
+						time_lastModified = imgFile.lastModified();
+					}
+				}
+				return bOK;
+			}
+		});
+		
+		if(imgList.length == 0) {
+			isGalleryEmpty = true;
+			
+			updateThumbnail(BitmapFactory.decodeResource(getResources(), R.drawable.img_none));
+		} else {
+			//Bitmap thumbBitmap = Bitmap.createBitmap(targetDir + imgList[imgList.length-1]);
+			Bitmap thumbBitmap = BitmapFactory.decodeFile(targetDir + "/"+imgList[imgList.length-1]);
+			updateThumbnail(thumbBitmap);
+		}
+		/*
 		
 		try {
 		//만약 갤러리에 사진이 없을 경우
@@ -1369,7 +1424,7 @@ public class AC_Main extends Activity {
 		}
 		} catch (Exception e) {
 			Log.e(TAG, "ERROR:"+e.getLocalizedMessage());
-		}
+		}*/
 	}
 
 	/**
@@ -1702,7 +1757,7 @@ public class AC_Main extends Activity {
 				if (isControlLayoutShow == true
 						&& controlLayout_linearParams.leftMargin < 0) {
 					controlLayout_linearParams.leftMargin += 20;
-					// TODO
+
 					controlLayout.setLayoutParams(controlLayout_linearParams);
 				} else if (isControlLayoutShow == false
 						&& controlLayout_linearParams.leftMargin > -controlLayoutWidth) {
@@ -1788,6 +1843,9 @@ public class AC_Main extends Activity {
 				btn_shutter.setImageDrawable(getResources().getDrawable(
 						R.drawable.c_shutter));
 				break;
+			case WHAT_CHANGE_SCREEN_RATIO:
+				initCameraBySharedPreference();
+				break;
 			}
 
 			return false;
@@ -1825,7 +1883,6 @@ public class AC_Main extends Activity {
 						} else if(isInTimingShot == false) {
 							mHandler.sendEmptyMessage(WHAT_AUTOFOCUSING);
 						}
-						//TODO
 						// isPressed = false;
 					}
 				}
@@ -1894,6 +1951,17 @@ public class AC_Main extends Activity {
 					Message msg = new Message();
 					msg.what = WHAT_SOUND_GAGE_MOVE;
 					mHandler.sendMessage(msg);
+				}
+				
+				
+				//사진 해상도를 다시 설정한다
+				if(retrySetPreviewSize == true) {
+					if(1000 < new Date().getTime() - time_SetPreviewSizeFailed) {
+						retrySetPreviewSize = false;
+						Message msg = new Message();
+						msg.what = WHAT_CHANGE_SCREEN_RATIO;
+						mHandler.sendMessage(msg);
+					}
 				}
 			}
 		}

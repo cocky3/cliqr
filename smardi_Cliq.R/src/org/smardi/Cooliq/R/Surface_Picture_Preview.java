@@ -5,14 +5,15 @@ import java.util.*;
 
 import android.content.*;
 import android.hardware.*;
-import android.hardware.Camera.*;
-import android.os.*;
+import android.hardware.Camera.CameraInfo;
+import android.hardware.Camera.Parameters;
+import android.hardware.Camera.Size;
 import android.util.*;
 import android.view.*;
 
 public class Surface_Picture_Preview extends SurfaceView implements
 		SurfaceHolder.Callback {
-	private boolean D = true;
+	private boolean D = false;
 
 	public SurfaceHolder mHolder;
 	Camera mCamera = null;
@@ -34,6 +35,10 @@ public class Surface_Picture_Preview extends SurfaceView implements
 
 	Camera.Parameters params = null;
 	Camera.Parameters temp_params = null;
+	
+	public int size_Picture_width = 0;
+	public int size_Picture_height = 0;
+	public Camera.Parameters size_Params = null;
 	
 	static int lastCamera = -1;	//이전에 설정되있던 카메라 종류를 알아내기 위함
 	
@@ -79,7 +84,12 @@ public class Surface_Picture_Preview extends SurfaceView implements
 			params = temp_params;
 		}
 
-		List<Size> arSize = params.getSupportedPreviewSizes();
+		List<Size> arSize = null;
+		if(size_Params != null) {
+			arSize = size_Params.getSupportedPreviewSizes();
+		} else {
+			arSize = params.getSupportedPreviewSizes();
+		}
 		/*if (false) {
 			for (Size size : arSize) {
 				Log.i("smardi.Cliq", "preview:" + size.width + " x "
@@ -90,11 +100,32 @@ public class Surface_Picture_Preview extends SurfaceView implements
 		if (arSize == null) {
 			params.setPreviewSize(width, height);
 		} else {
+			
+			
 			int diff = 10000;
 			Size opti = null;
 			for (Size s : arSize) {
 				if (Math.abs(s.height - height) < diff) {
 					diff = Math.abs(s.height - height);
+					opti = s;
+				}
+			}
+			
+			params.setPictureSize(size_Picture_width, size_Picture_height);
+			
+			double ratioDiff = Double.MAX_VALUE;
+			double ratioPicture = (double)params.getPictureSize().width / (double)params.getPictureSize().height;
+			
+			if(D) {
+				Log.e("CLIQ", "PictureSize:"+params.getPictureSize().width+" x "+params.getPictureSize().height);
+				Log.e("CLIQ", "ratioPicture:"+ratioPicture);
+			}
+			
+			for (Size s : arSize) {
+				double ratioPreview = (double)s.width / (double)s.height;
+				
+				if (Math.abs(ratioPicture - ratioPreview) < ratioDiff) {
+					ratioDiff = Math.abs(ratioPicture - ratioPreview);
 					opti = s;
 				}
 			}
@@ -110,7 +141,7 @@ public class Surface_Picture_Preview extends SurfaceView implements
 			// -----------------------------------------------------------------
 
 			if (D) {
-				Log.e("smardi.Cliq", "opti.w:" + opti.width + " opti.h:"
+				Log.e("CLIQ", "in Surface opti.w:" + opti.width + " opti.h:"
 						+ opti.height);
 			}
 		}
@@ -247,27 +278,57 @@ public class Surface_Picture_Preview extends SurfaceView implements
 	private void setCameraParameters(Parameters params) {
 		try {
 			mCameraParameters.setCameraType(whichCamera);
-			// mCameraParameters.setAntiBanding(params.getSupportedAntibanding());
-			mCameraParameters.setColorEffect(params
-					.getSupportedColorEffects());
-			mCameraParameters.setSceneMode(params.getSupportedSceneModes());
+		}catch (Exception e) {
+			Log.e("smardi.Cliq",
+					"ERROR in setCameraParameters (CameraType):" + e.getLocalizedMessage());
+		}
 		
-			// mCameraParameters.setFileFormat(params.getSupportedPictureFormats());
-			if (whichCamera == CAMERA_BACK) {
-				mCameraParameters.setFlashMode(params.getSupportedFlashModes());
-				mCameraParameters.setColorEffect(params
-						.getSupportedColorEffects());
-			}
-			mCameraParameters.setFocusMode(params.getSupportedFocusModes());
-			// mCameraParameters.setJpegThumbnailSizes(params.getSupportedJpegThumbnailSizes());
-			mCameraParameters
-					.setPictureSizes(params.getSupportedPictureSizes());
+		try {
+			mCameraParameters.setColorEffect(params.getSupportedColorEffects());
+		}catch (Exception e) {
+			Log.e("smardi.Cliq",
+					"ERROR in setCameraParameters (ColorEffects):" + e.getLocalizedMessage());
+		}
+			
+		try {
+			mCameraParameters.setSceneMode(params.getSupportedSceneModes());
+		}catch (Exception e) {
+			Log.e("smardi.Cliq",
+					"ERROR in setCameraParameters (SceneModes):" + e.getLocalizedMessage());
+		}
+		
+		try {
 			mCameraParameters
 					.setWhiteBalance(params.getSupportedWhiteBalance());
 		} catch (Exception e) {
 			Log.e("smardi.Cliq",
-					"ERROR in setCameraParameters:" + e.getLocalizedMessage());
+					"ERROR in setCameraParameters (WhiteBalance):" + e.getLocalizedMessage());
 		}
+			
+		try {
+			mCameraParameters.setFlashMode(params.getSupportedFlashModes());
+		}catch (Exception e) {
+			Log.e("smardi.Cliq",
+					"ERROR in setCameraParameters (FlashModes):" + e.getLocalizedMessage());
+		}
+		
+		try {
+			mCameraParameters.setFocusMode(params.getSupportedFocusModes());
+		}catch (Exception e) {
+			Log.e("smardi.Cliq",
+					"ERROR in setCameraParameters (FocusModes):" + e.getLocalizedMessage());
+		}
+			
+		try {
+			mCameraParameters
+					.setPictureSizes(params.getSupportedPictureSizes());
+		}catch (Exception e) {
+			Log.e("smardi.Cliq",
+					"ERROR in setCameraParameters (PictureSizes):" + e.getLocalizedMessage());
+		}
+		// mCameraParameters.setJpegThumbnailSizes(params.getSupportedJpegThumbnailSizes());
+		// mCameraParameters.setFileFormat(params.getSupportedPictureFormats());
+		// mCameraParameters.setAntiBanding(params.getSupportedAntibanding());
 	}
 
 }

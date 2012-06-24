@@ -4,7 +4,6 @@ import java.util.*;
 
 import android.content.*;
 import android.hardware.Camera.Size;
-import android.util.*;
 
 public class Manage_Camera_SharedPreference {
 	private Context mContext;

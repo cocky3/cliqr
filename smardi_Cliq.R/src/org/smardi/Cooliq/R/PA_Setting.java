@@ -548,10 +548,10 @@ public class PA_Setting extends PreferenceActivity {
 						KEY_CAMERA_PICTURESIZE_FRONT, "");
 				list_Camera_PictureSize_FRONT.setSummary(value);
 
-				String[] tempSize = value.split(" x ");
+				String[] tempSize = value.split(" ");
 				for (Size size : mCameraParams.getPictureSizes()) {
 					if (size.width == Integer.parseInt(tempSize[0])
-							&& size.height == Integer.parseInt(tempSize[1])) {
+							&& size.height == Integer.parseInt(tempSize[2])) {
 						mCameraPref.setPictureSizes_FRONT(size);
 					}
 				}
