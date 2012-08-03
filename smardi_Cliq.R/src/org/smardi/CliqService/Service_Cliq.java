@@ -47,7 +47,7 @@ public class Service_Cliq extends Service {
 	private int inputBlockSize = 1024;
 
 	// The selected windowing function.
-	private org.hermit.audalyzer.Window.Function windowFunction = org.hermit.audalyzer.Window.Function.BLACKMAN_HARRIS;
+	private org.hermit.audalyzer.Window.Function windowFunction = org.hermit.audalyzer.Window.Function.GAUSS;
 
 	// The desired decimation rate for this analyser. Only 1 in
 	// sampleDecimate blocks will actually be processed.

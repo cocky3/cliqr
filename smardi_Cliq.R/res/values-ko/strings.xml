@@ -51,6 +51,8 @@
     <string name="setting_content_tutorial">튜토리얼을 확인합니다.</string>
     <string name="setting_title_explain_component">화면 구성 확인</string>
     <string name="setting_content_explain_component">CLIQ.r의 화면 구성을 확인합니다.</string>
+    <string name="setting_title_send_email">개발자에게 보고하기</string>
+    <string name="setting_content_send_email">CLIQ.r에 대한 여러가지 의견을 전송합니다.</string>
     <string name="setting_registration_content">CLIQ.r의 신호를 등록합니다.</string>
     <string name="setting_communication_test_content">CLIQ.r과의 연결을 테스트합니다.</string>
     <string name="setting_change_sensitivity_content">CLIQ.r의 신호를 인식하는 민감도를 설정합니다.</string>
@@ -73,4 +75,8 @@
     
     <!-- 갤러리에 사진이 없을 때 -->
     <string name="there_is_no_picture">갤러리에 사진이 없습니다</string>
+    
+    <!-- 민감도 -->
+    <string name="sensitivity_senstive">민감하게</string>
+    <string name="sensitivity_insenstive">둔감하게</string>
 </resources>

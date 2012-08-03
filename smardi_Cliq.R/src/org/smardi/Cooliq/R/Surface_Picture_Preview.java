@@ -13,7 +13,8 @@ import android.view.*;
 
 public class Surface_Picture_Preview extends SurfaceView implements
 		SurfaceHolder.Callback {
-	private boolean D = false;
+	private final boolean D = false;
+	private final String TAG = "CLIQ.r::Surface_Picture_Preview";
 
 	public SurfaceHolder mHolder;
 	Camera mCamera = null;
@@ -67,8 +68,19 @@ public class Surface_Picture_Preview extends SurfaceView implements
 	}
 
 	public void resumePreview() {
+		if(whichCamera == CAMERA_FACE) {
+			params.setFlashMode("off");
+			params.setFocusMode("infinity");
+		}
+		
+		try {
+			mCamera.setParameters(params);
+		} catch (Exception e) {
+			Log.e(TAG, e.getLocalizedMessage());
+		}
+		
 		mCamera.startPreview();
-		setCameraParameters(mCamera.getParameters());
+		//setCameraParameters(mCamera.getParameters());
 	}
 
 	@Override
@@ -90,12 +102,13 @@ public class Surface_Picture_Preview extends SurfaceView implements
 		} else {
 			arSize = params.getSupportedPreviewSizes();
 		}
-		/*if (false) {
+		
+		if (D) {
 			for (Size size : arSize) {
-				Log.i("smardi.Cliq", "preview:" + size.width + " x "
+				Log.i(TAG, "preview:" + size.width + " x "
 						+ size.height);
 			}
-		}*/
+		}
 
 		if (arSize == null) {
 			params.setPreviewSize(width, height);
@@ -111,15 +124,21 @@ public class Surface_Picture_Preview extends SurfaceView implements
 				}
 			}
 			
+			if(size_Picture_width == 0 || size_Picture_height == 0) {
+				if(whichCamera == CAMERA_BACK) {
+					size_Picture_width = mCameraPref.getPictureSizes_BACK()[0];
+					size_Picture_height = mCameraPref.getPictureSizes_BACK()[1];
+				} else {
+					size_Picture_width = mCameraPref.getPictureSizes_FRONT()[0];
+					size_Picture_height = mCameraPref.getPictureSizes_FRONT()[1];
+				}
+			}
+			
 			params.setPictureSize(size_Picture_width, size_Picture_height);
 			
 			double ratioDiff = Double.MAX_VALUE;
 			double ratioPicture = (double)params.getPictureSize().width / (double)params.getPictureSize().height;
 			
-			if(D) {
-				Log.e("CLIQ", "PictureSize:"+params.getPictureSize().width+" x "+params.getPictureSize().height);
-				Log.e("CLIQ", "ratioPicture:"+ratioPicture);
-			}
 			
 			for (Size s : arSize) {
 				double ratioPreview = (double)s.width / (double)s.height;
@@ -130,18 +149,13 @@ public class Surface_Picture_Preview extends SurfaceView implements
 				}
 			}
 
-			// getOptimalPreviewSize 함수를 이용해서 최적 사이즈를 구함
-			// opti = getOptimalPreviewSize(arSize, width, height);
-
+			
 			params.setPreviewSize(opti.width, opti.height);
 
-			// -----------------------------------------------------------------
-			// params.setPreviewSize(width, height);
-
-			// -----------------------------------------------------------------
-
 			if (D) {
-				Log.e("CLIQ", "in Surface opti.w:" + opti.width + " opti.h:"
+				Log.i(TAG, "Picture Size:"+params.getPictureSize().width+" x "+params.getPictureSize().height);
+				Log.i(TAG, "ratioPicture:"+ratioPicture);
+				Log.i(TAG, "[SurfaceView optimized Preview size] " + opti.width + " x "
 						+ opti.height);
 			}
 		}
@@ -158,9 +172,9 @@ public class Surface_Picture_Preview extends SurfaceView implements
 		} catch (Exception e) {
 			isLoadCameraparameterSuccese = false;
 			
-			Log.e("Cliq.r", "Error in surfaceChanged:"+e.getLocalizedMessage());
-			Log.v("Cliq.r", "Error in surfaceChanged:"+e.getLocalizedMessage());
-			Log.i("Cliq.r", "Error in surfaceChanged:"+e.getLocalizedMessage());
+			Log.e(TAG, "Error in surfaceChanged:"+e.getLocalizedMessage());
+			Log.v(TAG, "Error in surfaceChanged:"+e.getLocalizedMessage());
+			Log.i(TAG, "Error in surfaceChanged:"+e.getLocalizedMessage());
 		}
 	}
 
@@ -199,7 +213,7 @@ public class Surface_Picture_Preview extends SurfaceView implements
 		int cameraCount = 0;
 		CameraInfo cameraInfo = new CameraInfo();
 		cameraCount = Camera.getNumberOfCameras();
-		// Log.e("Cliq.R", "cameraCount:"+cameraCount);
+		// Log.e(TAG, "cameraCount:"+cameraCount);
 		for (int camIdx = 0; camIdx < cameraCount; camIdx++) {
 			Camera.getCameraInfo(camIdx, cameraInfo);
 
@@ -223,7 +237,7 @@ public class Surface_Picture_Preview extends SurfaceView implements
 						}
 						resumePreview();
 					} catch (RuntimeException e) {
-						Log.e("Cliq.R",
+						Log.e(TAG,
 								"Camera failed to open back: "
 										+ e.getLocalizedMessage());
 					}
@@ -248,7 +262,7 @@ public class Surface_Picture_Preview extends SurfaceView implements
 						}
 						resumePreview();
 					} catch (RuntimeException e) {
-						Log.e("Cliq.R",
+						Log.e(TAG,
 								"Camera failed to open front: "
 										+ e.getLocalizedMessage());
 					}
@@ -279,21 +293,21 @@ public class Surface_Picture_Preview extends SurfaceView implements
 		try {
 			mCameraParameters.setCameraType(whichCamera);
 		}catch (Exception e) {
-			Log.e("smardi.Cliq",
+			Log.e(TAG,
 					"ERROR in setCameraParameters (CameraType):" + e.getLocalizedMessage());
 		}
 		
 		try {
 			mCameraParameters.setColorEffect(params.getSupportedColorEffects());
 		}catch (Exception e) {
-			Log.e("smardi.Cliq",
+			Log.e(TAG,
 					"ERROR in setCameraParameters (ColorEffects):" + e.getLocalizedMessage());
 		}
 			
 		try {
 			mCameraParameters.setSceneMode(params.getSupportedSceneModes());
 		}catch (Exception e) {
-			Log.e("smardi.Cliq",
+			Log.e(TAG,
 					"ERROR in setCameraParameters (SceneModes):" + e.getLocalizedMessage());
 		}
 		
@@ -301,29 +315,36 @@ public class Surface_Picture_Preview extends SurfaceView implements
 			mCameraParameters
 					.setWhiteBalance(params.getSupportedWhiteBalance());
 		} catch (Exception e) {
-			Log.e("smardi.Cliq",
+			Log.e(TAG,
 					"ERROR in setCameraParameters (WhiteBalance):" + e.getLocalizedMessage());
 		}
 			
 		try {
 			mCameraParameters.setFlashMode(params.getSupportedFlashModes());
 		}catch (Exception e) {
-			Log.e("smardi.Cliq",
+			Log.e(TAG,
 					"ERROR in setCameraParameters (FlashModes):" + e.getLocalizedMessage());
 		}
 		
 		try {
 			mCameraParameters.setFocusMode(params.getSupportedFocusModes());
 		}catch (Exception e) {
-			Log.e("smardi.Cliq",
+			Log.e(TAG,
 					"ERROR in setCameraParameters (FocusModes):" + e.getLocalizedMessage());
 		}
 			
 		try {
-			mCameraParameters
-					.setPictureSizes(params.getSupportedPictureSizes());
+			if(whichCamera == CAMERA_BACK) {
+				mCameraParameters
+					.setPictureBackSizes(params.getSupportedPictureSizes());
+			} else {
+				if (mCameraParameters.getPictureFrontSizes() == null) {
+					mCameraParameters.setPictureFrontSizes(params
+							.getSupportedPictureSizes());
+				}
+			}
 		}catch (Exception e) {
-			Log.e("smardi.Cliq",
+			Log.e(TAG,
 					"ERROR in setCameraParameters (PictureSizes):" + e.getLocalizedMessage());
 		}
 		// mCameraParameters.setJpegThumbnailSizes(params.getSupportedJpegThumbnailSizes());

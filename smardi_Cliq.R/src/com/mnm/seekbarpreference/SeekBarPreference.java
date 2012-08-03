@@ -39,12 +39,16 @@ public final class SeekBarPreference extends DialogPreference implements
 	private SeekBar mSeekBar;
 	private TextView mValueText;
 
+	Context mContext = null;
+	
 	// SharedPreference
 	private Manage_CLIQ_SharedPreference mCliqPref;
 
 	public SeekBarPreference(Context context, AttributeSet attrs) {
 		super(context, attrs);
 
+		mContext = context;
+		
 		mCliqPref = new Manage_CLIQ_SharedPreference(context);
 
 		// Read parameters from attributes
@@ -79,8 +83,8 @@ public final class SeekBarPreference extends DialogPreference implements
 				.toString(mMaxValue));
 
 		// 민감도를 나타내기 위해 Text를 바꿈
-		((TextView) view.findViewById(R.id.max_value)).setText("둔감하게");
-		((TextView) view.findViewById(R.id.min_value)).setText("민감하게");
+		((TextView) view.findViewById(R.id.max_value)).setText(mContext.getString(R.string.sensitivity_insenstive));
+		((TextView) view.findViewById(R.id.min_value)).setText(mContext.getString(R.string.sensitivity_senstive));
 
 		// Setup SeekBar
 		mSeekBar = (SeekBar) view.findViewById(R.id.seek_bar);

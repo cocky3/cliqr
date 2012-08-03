@@ -2,28 +2,37 @@ package org.smardi.Cooliq.R;
 
 import org.smardi.CliqService.*;
 
+import android.app.*;
 import android.content.*;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.*;
 import android.graphics.drawable.*;
 import android.hardware.Camera.Size;
+import android.net.*;
 import android.os.*;
 import android.preference.*;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.util.*;
+import android.view.*;
+import android.view.View.OnTouchListener;
+import android.view.ViewDebug.FlagToString;
+import android.widget.*;
 
 import com.mnm.seekbarpreference.*;
 
 public class PA_Setting extends PreferenceActivity {
 
 	private final boolean D = true;
-	private final String TAG = "smardi.Cliq";
+	private final String TAG = "CLIQ.r::PA_Setting";
 
 	Manage_Camera_SharedPreference mCameraPref;
 	Manage_CLIQ_SharedPreference mCliqPref;
 
+	private int whichCamera = -1;
+	
 	CameraParameters mCameraParams;
 
+	ListPreference list_Camera_ContinuousShooting;
 	ListPreference list_Camera_SceneMode;
 	ListPreference list_Camera_WhiteBalance;
 	ListPreference list_Camera_ColorEffect;
@@ -42,6 +51,7 @@ public class PA_Setting extends PreferenceActivity {
 	
 	private final String KEY_TUTORIAL = "org.smardi.cliq.tutorial";
 	private final String KEY_ExplainComponent = "org.smardi.cliq.explainComponent";
+	private final String KEY_SendEmail = "org.smardi.cliq.sendEmail";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -58,19 +68,43 @@ public class PA_Setting extends PreferenceActivity {
 				.registerOnSharedPreferenceChangeListener(
 						onSharedChangeListener);
 		
+		whichCamera = this.getIntent().getIntExtra("whichCamera", -1);
 		
-		getWindow().setBackgroundDrawable(new ColorDrawable(Color.argb(0x66, 0x00, 0x00, 0x00)));
-		getWindow().setLayout(getWindowManager().getDefaultDisplay().getWidth()*3/5, getWindowManager().getDefaultDisplay().getHeight()*4/5);
+		Window window = this.getWindow();
+		
+		window.setBackgroundDrawable(new ColorDrawable(Color.argb(0x66, 0x00, 0x00, 0x00)));
+		window.setLayout(getWindowManager().getDefaultDisplay().getWidth()*3/5, getWindowManager().getDefaultDisplay().getHeight()*4/5);
+		
+		//바깥을 클릭하면 다이얼로그 닫음
+		//바깥을 터치할 수 있게 함(모달을 해제)
+		window.setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL, WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL);
+		
+		//바깥이 터치 된 것을 인식하게 함
+		window.setFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH, WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH);
 	}
 	
-	
+
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		
+		if(MotionEvent.ACTION_OUTSIDE == event.getAction()) {
+			finish();
+			return false;
+		}
+		
+		return super.onTouchEvent(event);
+	}
+
+
+
+
+
 
 	private PreferenceScreen createPreferenceHierarchy() {
-
 		// Root
 		PreferenceScreen root = getPreferenceManager().createPreferenceScreen(
 				this);
-
+		
 		// CLIQ.r 주파수 등록
 
 		for (int menuIdx = 0; menuIdx < 2; menuIdx++) {
@@ -143,10 +177,14 @@ public class PA_Setting extends PreferenceActivity {
 							.setTitle(getString(R.string.setting_rear_resolution_title));
 					list_Camera_PictureSize_BACK.setSummary(currentBackSize);
 					cameraPrefCat.addPreference(list_Camera_PictureSize_BACK);
+					list_Camera_PictureSize_BACK.setOnPreferenceClickListener(onPreferenceClickListener);
 				} else {
 					// Front 사진 크기
-					String currentFrontSize = mCameraPref.getPictureSizes_FRONT()[0]
-							+ " x " + mCameraPref.getPictureSizes_FRONT()[1];
+					int width = mCameraPref.getPictureSizes_FRONT()[0];
+					int height = mCameraPref.getPictureSizes_FRONT()[1];
+					String pixel = String.format("%.1f", Math.round(width*height/100000f)/10f);
+					String currentFrontSize = width+ " x " + height + " ("+pixel+"M)";
+					
 					list_Camera_PictureSize_FRONT = new ListPreference(this);
 					list_Camera_PictureSize_FRONT.setKey(KEY_CAMERA_PICTURESIZE_FRONT);
 					list_Camera_PictureSize_FRONT.setEntries(mCameraPref
@@ -159,6 +197,7 @@ public class PA_Setting extends PreferenceActivity {
 							.setTitle(getString(R.string.setting_front_resolution_title));
 					list_Camera_PictureSize_FRONT.setSummary(currentFrontSize);
 					cameraPrefCat.addPreference(list_Camera_PictureSize_FRONT);
+					list_Camera_PictureSize_FRONT.setOnPreferenceClickListener(onPreferenceClickListener);
 				}
 				
 				
@@ -193,7 +232,8 @@ public class PA_Setting extends PreferenceActivity {
 						.setDialogTitle(getString(R.string.setting_color_effect_title));
 				list_Camera_ColorEffect
 						.setTitle(getString(R.string.setting_color_effect_title));
-		
+				list_Camera_ColorEffect.setOnPreferenceClickListener(onPreferenceClickListener);
+				
 				String summaryColorEffect = mCameraPref.getColorEffect();
 				if(getString(R.string.language).equals("ko")== true) {
 					summaryColorEffect = translateColorEffet(summaryColorEffect);
@@ -260,6 +300,8 @@ public class PA_Setting extends PreferenceActivity {
 					list_Camera_WhiteBalance.setEnabled(false);
 				}
 				
+				list_Camera_WhiteBalance.setOnPreferenceClickListener(onPreferenceClickListener);
+				
 				
 				
 				
@@ -289,7 +331,7 @@ public class PA_Setting extends PreferenceActivity {
 				if(getString(R.string.language).equals("ko")== true) {
 					list_Camera_SceneMode.setEntries(translatedSceneModeList);
 				} else {
-					mCameraPref.getSceneModeList();
+					list_Camera_SceneMode.setEntries(mCameraPref.getSceneModeList());
 				}
 				
 				list_Camera_SceneMode.setEntryValues(mCameraPref.getSceneModeList());
@@ -306,6 +348,52 @@ public class PA_Setting extends PreferenceActivity {
 		
 				list_Camera_SceneMode.setSummary(summarySceneMode);
 				cameraPrefCat.addPreference(list_Camera_SceneMode);
+				
+				list_Camera_SceneMode.setOnPreferenceClickListener(onPreferenceClickListener);
+				
+				
+				// 카메라 장면모드++++++++
+				list_Camera_ContinuousShooting = new ListPreference(this);
+				list_Camera_ContinuousShooting.setKey(KEY_CAMERA_SCENEMODE);
+		
+				// 모드를 한글로 바꾼다
+				String[] translatedContinuousShootingList = mCameraPref.getContinuousShooting();
+				String[] continuousShooting_en = getResources().getStringArray(
+						R.array.continuousShooting_en);
+				String[] continuousShooting_ko = getResources().getStringArray(
+						R.array.continuousShooting_ko);
+		
+				for (int i = 0; i < translatedContinuousShootingList.length; i++) {
+					for (int j = 0; j < sceneMode_en.length; j++) {
+						if (translatedContinuousShootingList[i].equals(sceneMode_en[j]) == true) {
+							translatedContinuousShootingList[i] = sceneMode_ko[j];
+							break;
+						}
+					}
+				}
+				
+				if(getString(R.string.language).equals("ko")== true) {
+					list_Camera_ContinuousShooting.setEntries(translatedContinuousShootingList);
+				} else {
+					list_Camera_ContinuousShooting.setEntries(mCameraPref.getSceneModeList());
+				}
+				
+				list_Camera_ContinuousShooting.setEntryValues(mCameraPref.getSceneModeList());
+				list_Camera_ContinuousShooting
+						.setDialogTitle(getString(R.string.setting_scene_mode_title));
+				list_Camera_ContinuousShooting
+						.setTitle(getString(R.string.setting_scene_mode_title));
+		
+				String summarySceneMode = mCameraPref.getSceneMode();
+				
+				if(getString(R.string.language).equals("ko")== true) {
+					summarySceneMode = translateSceneMode(summarySceneMode);
+				}
+		
+				list_Camera_SceneMode.setSummary(summarySceneMode);
+				cameraPrefCat.addPreference(list_Camera_SceneMode);
+				
+				list_Camera_SceneMode.setOnPreferenceClickListener(onPreferenceClickListener);
 			}
 		}
 		
@@ -342,70 +430,24 @@ public class PA_Setting extends PreferenceActivity {
 				.setOnPreferenceClickListener(onPreferenceClickListener);
 		HelpCat.addPreference(preference_ExplainComponent);
 		
-		/*
-		 * // Edit text preference EditTextPreference editTextPref = new
-		 * EditTextPreference(this);
-		 * editTextPref.setDialogTitle(R.string.dialog_title_edittext_preference
-		 * ); editTextPref.setKey("edittext_preference");
-		 * editTextPref.setTitle(R.string.title_edittext_preference);
-		 * editTextPref.setSummary(R.string.summary_edittext_preference);
-		 * dialogBasedPrefCat.addPreference(editTextPref);
-		 * 
-		 * // List Preference ListPreference listPref = new
-		 * ListPreference(this); listPref.setEntries(new String[] { "A", "B",
-		 * "C", "D", "E" }); listPref.setEntryValues(new String[] { "a", "b",
-		 * "c", "d", "e" });
-		 * listPref.setDialogTitle(R.string.dialog_title_list_preference);
-		 * listPref.setSummary(R.string.summary_list_preference);
-		 * dialogBasedPrefCat.addPreference(listPref);
-		 */
-		/*
-		 * // Launch preference PreferenceCategory launchPrefCat = new
-		 * PreferenceCategory(this);
-		 * launchPrefCat.setTitle(R.string.launch_preferences);
-		 * root.addPreference(launchPrefCat);
-		 * 
-		 * // Screen preference PreferenceScreen screenPref =
-		 * getPreferenceManager() .createPreferenceScreen(this);
-		 * screenPref.setKey("screen_preference");
-		 * screenPref.setTitle(R.string.title_screen_preference);
-		 * screenPref.setSummary(R.string.summary_screen_preference);
-		 * launchPrefCat.addPreference(screenPref);
-		 * 
-		 * CheckBoxPreference nextScreenCheckBoxPref = new
-		 * CheckBoxPreference(this);
-		 * nextScreenCheckBoxPref.setKey("next_screentoggle_preference");
-		 * nextScreenCheckBoxPref
-		 * .setTitle(R.string.title_next_screen_toggle_preference);
-		 * nextScreenCheckBoxPref
-		 * .setSummary(R.string.summary_next_screen_toggle_preference);
-		 * screenPref.addPreference(nextScreenCheckBoxPref);
-		 * 
-		 * // Intent preference PreferenceScreen intentPref =
-		 * getPreferenceManager() .createPreferenceScreen(this);
-		 * intentPref.setIntent(new Intent().setAction(Intent.ACTION_VIEW)
-		 * .setData(Uri.parse("http://www.android.com")));
-		 * intentPref.setTitle(R.string.title_intent_preference);
-		 * intentPref.setSummary(R.string.summary_intent_preference);
-		 * launchPrefCat.addPreference(intentPref);
-		 * 
-		 * // Preference attributes PreferenceCategory prefAttrsCat = new
-		 * PreferenceCategory(this);
-		 * prefAttrsCat.setTitle(R.string.preference_attributes);
-		 * root.addPreference(prefAttrsCat);
-		 * 
-		 * // Visual parent toggle preference CheckBoxPreference
-		 * parentCheckBoxPref = new CheckBoxPreference(this);
-		 * parentCheckBoxPref.setTitle(R.string.title_parent_preference);
-		 * parentCheckBoxPref.setSummary(R.string.summary_parent_preference);
-		 * prefAttrsCat.addPreference(parentCheckBoxPref);
-		 */
+		//개발자에게 이메일 보내기
+		Preference preference_sendEmail = new Preference(this);
+		preference_sendEmail.setKey(KEY_SendEmail);
+		preference_sendEmail
+				.setTitle(getString(R.string.setting_title_send_email));
+		preference_sendEmail
+				.setSummary(getString(R.string.setting_content_send_email));
+		preference_sendEmail
+				.setOnPreferenceClickListener(onPreferenceClickListener);
+		HelpCat.addPreference(preference_sendEmail);
+		
 		return root;
 	}
 
 	OnPreferenceClickListener onPreferenceClickListener = new Preference.OnPreferenceClickListener() {
 		@Override
 		public boolean onPreferenceClick(Preference preference) {
+			
 			String key = preference.getKey();
 
 			if (key.equals(KEY_CLIQ_REGIST)) {
@@ -421,9 +463,33 @@ public class PA_Setting extends PreferenceActivity {
 					if (currentSize
 							.equals(mCameraPref.getPictureSizeBackList()[i])) {
 						list_Camera_PictureSize_BACK.setValueIndex(i);
-						Log.e("smardi.Cliq", "index:" + i);
 						break;
 					}
+				}
+				
+				Dialog dialog_color = list_Camera_PictureSize_BACK.getDialog();
+				if(dialog_color.isShowing() == true) {
+					dialog_color.getWindow().setLayout(getWindowManager().getDefaultDisplay().getWidth()*3/5, getWindowManager().getDefaultDisplay().getHeight()*4/5);
+				}
+			} else if (key.equals(KEY_CAMERA_PICTURESIZE_FRONT)) {
+				String currentSize = mCameraPref.getPictureSizes()[0] + " x "
+						+ mCameraPref.getPictureSizes()[1];
+				for (int i = 0; i < mCameraPref.getPictureSizeBackList().length; i++) {
+					if (currentSize
+							.equals(mCameraPref.getPictureSizeBackList()[i])) {
+						list_Camera_PictureSize_FRONT.setValueIndex(i);
+						break;
+					}
+				}
+
+				Dialog dialog_color = list_Camera_PictureSize_FRONT.getDialog();
+				if (dialog_color.isShowing() == true) {
+					dialog_color.getWindow()
+							.setLayout(
+									getWindowManager().getDefaultDisplay()
+											.getWidth() * 3 / 5,
+									getWindowManager().getDefaultDisplay()
+											.getHeight() * 4 / 5);
 				}
 			} else if(key.equals(KEY_TUTORIAL)) {
 				startActivity(new Intent(PA_Setting.this, AC_Help_tutorial.class));
@@ -434,6 +500,42 @@ public class PA_Setting extends PreferenceActivity {
 				intent.putExtra("tutorial", true);
 				PA_Setting.this.setResult(2, intent);
 				PA_Setting.this.finish();
+			}
+			else if(key.equals(KEY_SendEmail)) {
+				Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:smardi.cliqr@gmail.com"));
+				intent.putExtra(Intent.EXTRA_SUBJECT, "CLIQ.r에 대해 보고합니다.");
+				startActivity(intent);
+				
+				mCameraPref.setStateSendEmail(true);
+			}
+			
+			
+			else if(key.equals(KEY_CAMERA_COLOREFFECT)) {
+				Dialog dialog_color = list_Camera_ColorEffect.getDialog();
+				if(dialog_color.isShowing() == true) {
+					
+					dialog_color.getContext().setTheme(android.R.style.Theme_Translucent_NoTitleBar);
+					dialog_color.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+					dialog_color.getWindow().setLayout(getWindowManager().getDefaultDisplay().getWidth()*3/5, getWindowManager().getDefaultDisplay().getHeight()*4/5);
+				}
+			}
+			else if(key.equals(KEY_CAMERA_PICTURESIZE_FRONT)) {
+				Dialog dialog_color = list_Camera_PictureSize_FRONT.getDialog();
+				if(dialog_color.isShowing() == true) {
+					dialog_color.getWindow().setLayout(getWindowManager().getDefaultDisplay().getWidth()*3/5, getWindowManager().getDefaultDisplay().getHeight()*4/5);
+				}
+			}
+			else if(key.equals(KEY_CAMERA_SCENEMODE)) {
+				Dialog dialog_color = list_Camera_SceneMode.getDialog();
+				if(dialog_color.isShowing() == true) {
+					dialog_color.getWindow().setLayout(getWindowManager().getDefaultDisplay().getWidth()*3/5, getWindowManager().getDefaultDisplay().getHeight()*4/5);
+				}
+			}
+			else if(key.equals(KEY_CAMERA_WHITEBALANCE)) {
+				Dialog dialog_color = list_Camera_WhiteBalance.getDialog();
+				if(dialog_color.isShowing() == true) {
+					dialog_color.getWindow().setLayout(getWindowManager().getDefaultDisplay().getWidth()*3/5, getWindowManager().getDefaultDisplay().getHeight()*4/5);
+				}
 			}
 			return false;
 		}
@@ -535,7 +637,7 @@ public class PA_Setting extends PreferenceActivity {
 				list_Camera_PictureSize_BACK.setSummary(value);
 
 				String[] tempSize = value.split(" ");
-				for (Size size : mCameraParams.getPictureSizes()) {
+				for (Size size : mCameraParams.getPictureBackSizes()) {
 					if (size.width == Integer.parseInt(tempSize[0])
 							&& size.height == Integer.parseInt(tempSize[2])) {
 						mCameraPref.setPictureSizes_BACK(size);
@@ -547,9 +649,12 @@ public class PA_Setting extends PreferenceActivity {
 				String value = sharedPreferences.getString(
 						KEY_CAMERA_PICTURESIZE_FRONT, "");
 				list_Camera_PictureSize_FRONT.setSummary(value);
-
+				
 				String[] tempSize = value.split(" ");
-				for (Size size : mCameraParams.getPictureSizes()) {
+				for (Size size : mCameraParams.getPictureFrontSizes()) {
+					
+					Log.e(TAG, "tempSize:" + size.width + " x " + size.height + "("+tempSize[0]+" x "+ tempSize[2]+")");
+					
 					if (size.width == Integer.parseInt(tempSize[0])
 							&& size.height == Integer.parseInt(tempSize[2])) {
 						mCameraPref.setPictureSizes_FRONT(size);

@@ -23,38 +23,52 @@
         android:scaleType="fitCenter"
         android:src="@drawable/cliqr_regist_0" />
 
-    <TextView 
+    <TextView
         android:id="@+id/regist_progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@id/img_cliqr"
         android:layout_alignParentRight="true"
         android:layout_marginRight="15dp"
+        android:text=""
         android:textColor="#000000"
-        android:textSize="30dp"
-        android:text=""/>
-    
-    
-    <TextView
-        android:id="@+id/regist_explain_1"
+        android:textSize="30dp" />
+
+    <Button
+        android:id="@+id/btn_regist_cancel"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/img_cliqr"
-        android:padding="10dp"
-        android:text="CLIQ.r의 신호가 감지되면 붉은색 원이 나타납니다.\n\n파란색 원이 나타날 때까지 CLIQ.r을 계속 눌러주세요."
-        android:textColor="#333333" />
-    <TextView 
-        android:id="@+id/regist_explain_2"
+        android:layout_alignParentBottom="true"
+        android:text="취소" />
+
+    <ScrollView
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/regist_explain_1"
-        android:padding="10dp"
-        android:text="주변이 시끄러운 상황에서는 등록에 실패할 수 있습니다."
-        android:textColor="#CD2C24"/>
-	<Button 
-	    android:id="@+id/btn_cancel"
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_below="@id/regist_explain_2"
-	    android:text="취소"/>
+        android:layout_above="@id/btn_regist_cancel"
+        android:layout_below="@id/img_cliqr" >
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/regist_explain_1"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:text="CLIQ.r의 신호가 감지되면 붉은색 원이 나타납니다.\n\n파란색 원이 나타날 때까지 CLIQ.r을 계속 눌러주세요."
+                android:textColor="#333333" />
+
+            <TextView
+                android:id="@+id/regist_explain_2"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/regist_explain_1"
+                android:padding="10dp"
+                android:text="주변이 시끄러운 상황에서는 등록에 실패할 수 있습니다."
+                android:textColor="#CD2C24" />
+        </LinearLayout>
+    </ScrollView>
+
 </RelativeLayout>

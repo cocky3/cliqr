@@ -13,7 +13,8 @@ public class CameraParameters {
 	private List<String> sceneMode = null;
 	private List<String> whiteBalance = null;
 	private List<Size> jpegThumbnailSizes = null;
-	private List<Size> pictureSizes = null;
+	private List<Size> pictureSizes_back = null;
+	private List<Size> pictureSizes_front= null;
 	private List<String> antiBanding = null;
 	private List<Integer> fileFormat = null;
 	private int timerTime = 0;
@@ -22,6 +23,7 @@ public class CameraParameters {
 	Manage_Camera_SharedPreference mCameraPref;
 
 	private final boolean D = false;
+	private final String TAG = "CLIQ.r::CameraParameters";
 	
 	private static CameraParameters instance = null;
 
@@ -40,7 +42,8 @@ public class CameraParameters {
 		sceneMode = null;
 		whiteBalance = null;
 		jpegThumbnailSizes = null;
-		pictureSizes = null;
+		pictureSizes_back = null;
+		pictureSizes_front = null;
 		antiBanding = null;
 		fileFormat = null;
 		
@@ -52,7 +55,7 @@ public class CameraParameters {
 
 		if (D) {
 			for (String str : flashMode) {
-				Log.i("Cliq.R", "flashMode:" + str);
+				Log.i(TAG, "flashMode:" + str);
 			}
 		}
 	}
@@ -67,7 +70,7 @@ public class CameraParameters {
 		this.focusMode = focusMode;
 		if (D)
 			for (String str : focusMode) {
-				Log.i("Cliq.R", "focusMode:" + str);
+				Log.i(TAG, "focusMode:" + str);
 			}
 	}
 
@@ -80,7 +83,7 @@ public class CameraParameters {
 		mCameraPref.setSceneModeList(sceneMode);
 		if (D)
 			for (String str : sceneMode) {
-				Log.i("Cliq.R", "sceneMode:" + str);
+				Log.i(TAG, "sceneMode:" + str);
 			}
 	}
 
@@ -93,7 +96,7 @@ public class CameraParameters {
 		mCameraPref.setWhiteBalanceList(whiteBalance);
 		if (D)
 			for (String str : whiteBalance) {
-				Log.i("Cliq.R", "whiteBalance:" + str);
+				Log.i(TAG, "whiteBalance:" + str);
 			}
 	}
 
@@ -105,7 +108,7 @@ public class CameraParameters {
 		this.jpegThumbnailSizes = jpegThumbnailSizes;
 		if (D)
 			for (Size str : jpegThumbnailSizes) {
-				Log.i("Cliq.R", "jpegThumbnailWidth:" + str.width
+				Log.i(TAG, "jpegThumbnailWidth:" + str.width
 						+ "jpegThumbnailHeight" + str.height);
 			}
 	}
@@ -114,30 +117,69 @@ public class CameraParameters {
 		return jpegThumbnailSizes;
 	}
 
-	public void setPictureSizes(List<Size> pictureSizes) {
-		this.pictureSizes = pictureSizes;
+	public void setPictureBackSizes(List<Size> pictureSizes) {
+		
+		mCameraPref.setPictureSizeBackList(pictureSizes);
+		this.pictureSizes_back = pictureSizes;
+		
+		if (D)
+			for (Size str : pictureSizes) {
+				Log.i(TAG, whichCamera + " pictureSizes Width:" + str.width
+						+ "pictureSizesHeight" + str.height);
+			}
+	}
+	
+	public void setPictureFrontSizes(List<Size> pictureSizes) {
+		
+		mCameraPref.setPictureSizeFrontList(pictureSizes);
+		this.pictureSizes_front = pictureSizes;
+		
+		if (true)
+			for (Size str : pictureSizes) {
+				Log.i(TAG, whichCamera + " pictureSizes Width:" + str.width
+						+ "pictureSizesHeight" + str.height);
+			}
+	}
+	
+	/*public void setPictureSizes(List<Size> pictureSizes) {
+		
 		if(whichCamera == Surface_Picture_Preview.CAMERA_BACK) {
 			mCameraPref.setPictureSizeBackList(pictureSizes);
+			this.pictureSizes_back = pictureSizes;
 		} else {
 			mCameraPref.setPictureSizeFrontList(pictureSizes);
+			this.pictureSizes_front = pictureSizes;
 		}
 		
 		if (D)
 			for (Size str : pictureSizes) {
-				Log.i("Cliq.R", whichCamera + " pictureSizes Width:" + str.width
+				Log.i(TAG, whichCamera + " pictureSizes Width:" + str.width
 						+ "pictureSizesHeight" + str.height);
 			}
-	}
+	}*/
 
-	public List<Size> getPictureSizes() {
-		return pictureSizes;
+	public List<Size> getPictureBackSizes() {
+		return pictureSizes_back;
 	}
+	
+	public List<Size> getPictureFrontSizes() {
+		return pictureSizes_front;
+	}
+	/*
+	public List<Size> getPictureSizes() {
+		if(whichCamera == Surface_Picture_Preview.CAMERA_BACK) {
+			return pictureSizes_back;
+		} else {
+			return pictureSizes_front;
+		}
+		
+	}*/
 
 	public void setFileFormat(List<Integer> fileFormat) {
 		this.fileFormat = fileFormat;
 		if (D)
 			for (int str : fileFormat) {
-				Log.i("Cliq.R", "fileFormat:" + str);
+				Log.i(TAG, "fileFormat:" + str);
 			}
 	}
 
@@ -149,7 +191,7 @@ public class CameraParameters {
 		this.antiBanding = antiBanding;
 		if (D)
 			for (String str : antiBanding) {
-				Log.i("Cliq.R", "antiBanding:" + str);
+				Log.i(TAG, "antiBanding:" + str);
 			}
 	}
 
@@ -162,7 +204,7 @@ public class CameraParameters {
 		mCameraPref.setColorEffectList(colorEffect);
 		if (D)
 			for (String str : colorEffect) {
-				Log.i("Cliq.R", "colorEffect:" + str);
+				Log.i(TAG, "colorEffect:" + str);
 			}
 	}
 

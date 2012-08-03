@@ -32,7 +32,7 @@ public class AC_Dialog_CLIQr_Test extends Activity {
 		
 		mPref = new Manage_CLIQ_SharedPreference(AC_Dialog_CLIQr_Test.this);
 		
-		btn_cancel = (Button)findViewById(R.id.btn_cancel);
+		btn_cancel = (Button)findViewById(R.id.btn_test_cancel);
 		btn_cancel.setOnClickListener(viewClickListener);
 		img_cliq = (ImageView)findViewById(R.id.img_cliqr);
 		
@@ -61,7 +61,7 @@ public class AC_Dialog_CLIQr_Test extends Activity {
 		@Override
 		public void onClick(View v) {
 			switch(v.getId()) {
-			case R.id.btn_cancel:
+			case R.id.btn_test_cancel:
 				finish();
 				break;
 			}

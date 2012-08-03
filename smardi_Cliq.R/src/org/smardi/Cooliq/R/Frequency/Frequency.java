@@ -4,6 +4,7 @@ import java.util.*;
 
 import org.hermit.audalyzer.*;
 import org.smardi.CliqService.*;
+import org.smardi.Cooliq.R.*;
 
 import android.content.*;
 import android.os.*;
@@ -95,7 +96,7 @@ public class Frequency {
 
 	private long time_lastCalculated = 0;
 
-	private final int DETECTING_MIN_FREQ = 5000;
+	private int DETECTING_MIN_FREQ = 5000;
 
 	Context mContext = null;
 
@@ -115,6 +116,11 @@ public class Frequency {
 	private long timeCliqrStoped = 0;
 	
 	
+	//카메라 설정
+	private Manage_Camera_SharedPreference mPrefCamera = null;
+	
+	
+	
 	//Singleton 패턴 적용
 	private static Frequency instance = null;
 	
@@ -128,7 +134,25 @@ public class Frequency {
 	public Frequency(Context context) {
 		mContext = context;
 		mPref = new Manage_CLIQ_SharedPreference(mContext);
+		mPrefCamera = new Manage_Camera_SharedPreference(mContext);
 
+		
+		String device = mPrefCamera.getPhoneModel();
+		
+		if(device.equals("SHV-E110S")) {
+			//갤럭시 LTE
+			DETECTING_MIN_FREQ = 5000;
+		} else if(device.equals("SHV-E120S") || device.equals("SHV-E120K") || device.equals("SHV-E120L")) {
+			//갤럭시 LTE HD
+			DETECTING_MIN_FREQ = 5000;
+		} else if(device.equals("LG-F160S") || device.equals("LG-F160K") || device.equals("LG-F160L")) {
+			//갤럭시 LTE HD
+			DETECTING_MIN_FREQ = 5000;
+		}
+		else {
+			DETECTING_MIN_FREQ = 16000;
+		}
+		
 		initAudio();
 	}
 
@@ -273,6 +297,13 @@ public class Frequency {
 		return result;
 	}
 
+	
+	
+	
+	
+	int lastMaxIndex = 0;	//
+	int countSameMaxIndex = 0;	//
+	int MAX_COUNT_SAME_MAX_INDEX = 10;	//3번 반복되야 신호가 들어온 것으로 인지
 	/**
 	 * 수집된 주파수 배열 중에서 가장 큰 값을 갖는 주파수 값과 그 때의 크기를 리턴한다.
 	 * 
@@ -284,14 +315,31 @@ public class Frequency {
 			int maxFreq) {
 		int maxIndex = 0;
 		float maxValue = 0;
-
+		float minValue = Float.POSITIVE_INFINITY;
+		
 		for (int i = convertFrequencyToIndex(minFreq); i < fftResult.length
 				&& i < convertFrequencyToIndex(maxFreq); i++) {
 			if (maxValue < fftResult[i]) {
 				maxValue = fftResult[i];
 				maxIndex = i;
 			}
+			
+			if(fftResult[i] < minValue) {
+				minValue = fftResult[i];
+			}
 		}
+		
+		if(lastMaxIndex != maxIndex) {
+			lastMaxIndex = maxIndex;
+			countSameMaxIndex = 0;
+		} else {
+			countSameMaxIndex += 1;
+		}
+		
+		if(countSameMaxIndex < MAX_COUNT_SAME_MAX_INDEX) {
+			return null;
+		}
+		
 
 		// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		// 실제로 클리커가 눌려서 발생된 값인지 확인하기 위한 작업 추가-----*********************
@@ -322,12 +370,17 @@ public class Frequency {
 		// 최대 값이 주변 값보다 30%이상 높은지 확인한다
 		int[] result = new int[2];
 
-		if (maxValue > 0.0001 && maxValue / avgArround > 15) {
+		
+		maxValue = getDB(maxValue) - getDB(minValue);
+		avgArround = getDB(avgArround) - getDB(minValue);
+		
+		if(maxValue > avgArround * (1.15)) {
+		//if (maxValue > 0.0001 && maxValue / avgArround > 15) {
 			// 최대 값이 일정 신호 값 이상이고 주변값보다 현저히 높은 경우
 			result[0] = maxIndex;
 			result[1] = (int) maxValue;
 
-			if (D) {
+			if (true) {
 				Log.i(TAG, "Max(" + maxValue + ") / Arround(" + avgArround
 						+ ") = " + maxValue / avgArround);
 			}
@@ -427,6 +480,10 @@ public class Frequency {
 
 		return tempMax;
 	}
+	
+	private float getDB(float power) {
+		return (float) ((float) (Math.log10(power) / 6f + 1f) * 400.);
+	}
 
 	private int convertFrequencyToIndex(int Frequency) {
 		return (int) Math.round((inputBlockSize / 2 / 22050. * Frequency - 1));
@@ -494,9 +551,11 @@ public class Frequency {
 		//클리커 주파수 대역에서 가장 높은 주파수 값을 내보낸다
 		if(isCliqrRegistation == true) {
 			int[] result = getMaxAmplitudeFrequency(spectrumData, DETECTING_MIN_FREQ, 21050);
-			Intent intentHightestFreq = new Intent().setAction(ACTION_CLIQ_REGIST_HIGHEST_FREQUENCY);
-			intentHightestFreq.putExtra("freq", convertIndextToFrequency(result[0]));
-			mContext.sendBroadcast(intentHightestFreq);
+			if(result != null) {
+				Intent intentHightestFreq = new Intent().setAction(ACTION_CLIQ_REGIST_HIGHEST_FREQUENCY);
+				intentHightestFreq.putExtra("freq", convertIndextToFrequency(result[0]));
+				mContext.sendBroadcast(intentHightestFreq);
+			}
 		} else {
 
 			// CLIQ.r 신호가 발생했는지 확인한다

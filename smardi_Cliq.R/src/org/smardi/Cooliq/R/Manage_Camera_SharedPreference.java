@@ -4,6 +4,7 @@ import java.util.*;
 
 import android.content.*;
 import android.hardware.Camera.Size;
+import android.util.*;
 
 public class Manage_Camera_SharedPreference {
 	private Context mContext;
@@ -120,7 +121,33 @@ public class Manage_Camera_SharedPreference {
 		
 		return value;
 	}
-
+	
+	//-----------------------------------
+	//연속 촬영 개수
+	public void setContinuousShooting(List<Integer> continuousShooting) {
+		String value = "";
+		
+		for (int i=0; i<continuousShooting.size(); i++) {
+			if(i > 0) {
+				value += ("," + continuousShooting.get(i));
+			} else {
+				value += ("" + continuousShooting.get(i));
+			}
+		}
+		
+		mEditor.putString("continuousShootingList", value);
+		mEditor.commit();
+	}
+	
+	public String[] getContinuousShootingList() {
+		String[] value = null;
+		String tempValue = mPref.getString("continuousShootingList", "");
+		
+		value = tempValue.split("");
+		
+		return value;
+	}
+	//-----------------------------------
 
 	public void setWhiteBalance(String whiteBalance) {
 		mEditor.putString("whiteBalance", whiteBalance);
@@ -219,6 +246,7 @@ public class Manage_Camera_SharedPreference {
 	}
 	
 	public void setPictureSizes_FRONT(Size pictureSizes) {
+		Log.e("CLIQ.r", "setted front x:" + pictureSizes.width + " y:"+pictureSizes.height);
 		mEditor.putInt("pictureSizes_FRONT_x", pictureSizes.width);
 		mEditor.putInt("pictureSizes_FRONT_y", pictureSizes.height);
 		mEditor.commit();
@@ -261,8 +289,10 @@ public class Manage_Camera_SharedPreference {
 			}
 		}
 		
-		mEditor.putString("pictureSizeBackList", value);
-		mEditor.commit();
+		if(mPref.getString("pictureSizeBackList", "").equals("")) {
+			mEditor.putString("pictureSizeBackList", value);
+			mEditor.commit();
+		}
 	}
 	
 	
@@ -297,8 +327,10 @@ public class Manage_Camera_SharedPreference {
 			}
 		}
 		
-		mEditor.putString("pictureFrontSizeList", value);
-		mEditor.commit();
+		if(mPref.getString("pictureFrontSizeList", "").equals("")) {
+			mEditor.putString("pictureFrontSizeList", value);
+			mEditor.commit();
+		}
 	}
 	
 	
@@ -376,4 +408,30 @@ public class Manage_Camera_SharedPreference {
 	public boolean getCheckedTutorial() {
 		return mPref.getBoolean("checkedTutorial", false);
 	}
+	
+	
+	//스마트폰 모델명을 저장
+	public void setPhoneModel(String model) {
+		mEditor.putString("phoneModel", model);
+		mEditor.commit();
+	}
+	
+	//스마트폰 모델명을 가져온다.
+	public String getPhoneModel() {
+		return mPref.getString("phoneModel", "");
+	}
+	
+	//이메일 보내기로 이동했는지 저장한다
+	public void setStateSendEmail (boolean email) {
+		mEditor.putBoolean("sendEmail", email);
+		mEditor.commit();
+	}
+	
+	//이메일 보내기로 이동했었는지 확인한다
+	public boolean getStateSendEmail() {
+		return mPref.getBoolean("sendEmail", false);
+	}
+	
+	//---------
+	
 }

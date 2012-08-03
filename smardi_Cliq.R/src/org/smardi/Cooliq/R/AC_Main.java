@@ -5,6 +5,7 @@ import java.text.*;
 import java.util.*;
 
 import org.smardi.CliqService.*;
+import org.smardi.Cooliq.R.Gallary.*;
 
 import android.app.*;
 import android.content.*;
@@ -20,6 +21,7 @@ import android.os.*;
 import android.provider.*;
 import android.util.*;
 import android.view.*;
+import android.webkit.*;
 import android.widget.*;
 import android.widget.LinearLayout.LayoutParams;
 
@@ -27,6 +29,8 @@ public class AC_Main extends Activity {
 
 	// 디버깅
 	private final boolean D = false;
+	// Log
+	private final String TAG = "Cliq.R::AC_Main";
 
 	// 프리퍼런스
 	private Manage_Camera_SharedPreference mCameraPref;
@@ -133,8 +137,7 @@ public class AC_Main extends Activity {
 	public final static int ACTIVITY_SETTING = 0; // 설정화면으로 전달할 request code
 	public final static int ACTIVITY_GALLARY = 1; // 갤러리로 전달할 request code
 
-	// Log
-	private final String TAG = "Cliq.R";
+	
 
 	// File
 	private static final String PHOTO_FILE_EXT_JPG = ".jpg";
@@ -143,7 +146,7 @@ public class AC_Main extends Activity {
 	private static final String PHOTO_SAVE_FOLDER = "DCIM/CAMERA";
 
 	// Camera parameters
-	private CameraParameters mCameraParametes = null;
+	private CameraParameters mCameraReadedParametes = null;
 	private boolean isSetCameraParameters = false; // 카메라 관련 변수를 설정했는지.
 	private Manage_CLIQ_SharedPreference mSharedPreference = null;
 
@@ -167,8 +170,8 @@ public class AC_Main extends Activity {
 	private boolean isTutorialShow = true; // 처음에는 튜토리얼이 나타나있음.
 
 	// 사진의 방향을 알아내기 위한 리스너
-	private OrientationEventListener oel = null;
-	private int mAngle = 0;
+	private OrientationEventListener orientationMonitor = null;
+	private int mOrientation = 0;
 	
 	//갤러리가 비어있는지 확인하기 위한...
 	private boolean isGalleryEmpty = false;
@@ -184,28 +187,39 @@ public class AC_Main extends Activity {
 	private boolean retrySetPreviewSize = false;
 	private long time_SetPreviewSizeFailed = 0;
 	
+	//설정 액티비티를 종료하기 위해서  
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.ac_main);
-
+		
 		// Camera type setting
 		mCameraPref = new Manage_Camera_SharedPreference(AC_Main.this);
 		mCameraPref.setWhichCamera(whichCamera);
-
+		
+		//컴포넌트들을 레이아웃에서 불러온다
 		componentInitiation();
+		
+		//각 컴포넌트에 이벤트를 정의한다
 		eventRegist();
+		
+		//사운드 파일들을 불러온다
 		loadSoundFiles();
+		
+		//폰트를 적용한다
 		changeFont();
+		
+		//튜토리얼을 영어로 띄울지 결정한다
 		applyTutorialEnglish();
 
 		// 썸네일 새로고침
 		updateThumbnail();
 
+		//카메라 설정을 관리하는 스레드를 시작한다
 		mThread.start();
 		isRunThread = true;
-
+		
 		// 클리커 서비스 시작
 		Intent service = new Intent(AC_Main.this, Service_Cliq.class);
 		startService(service);
@@ -221,8 +235,30 @@ public class AC_Main extends Activity {
 		 * intent.setAction(Service_Cliq.ACTION_MODE_CLIQING_ON);
 		 * sendBroadcast(intent);
 		 */
+		mCameraPref.setPhoneModel(Build.DEVICE);
+		
+		CountDownTimer cCliqTimer = new CountDownTimer(100, 100) {
+			
+			@Override
+			public void onTick(long millisUntilFinished) {
+				
+			}
+			
+			@Override
+			public void onFinish() {
+				if(0 < mCameraPref.getModeCLIQ()) {
+					isCliqSoundShutterON = true;
+				}
+				setShutterMode();
+				setCliqSoundShutterONOFF();
+			}
+		}.start();
 	}
 
+	
+	/**
+	 * 사용자 언어가 영어 일 경우 영어 튜토리얼을 출력한다
+	 */
 	private void applyTutorialEnglish() {
 		if(getString(R.string.language).equals("en")== true) {
 			((ImageView)tutorial.getChildAt(0)).setImageDrawable(getResources().getDrawable(R.drawable.tutorial_left_en));
@@ -235,22 +271,25 @@ public class AC_Main extends Activity {
 	// =======================================================
 	private boolean isRestart = false;
 
+	
 	@Override
 	protected void onPause() {
 		super.onPause();
+		Log.e(TAG, "onPause");
+		
 		sendBroadcast(new Intent().setAction(Service_Cliq.ACTION_CLIQ_STOP));
 
 		unregisterReceiver(mBroadcastReceiver);
-		oel.disable();
+		orientationMonitor.disable();
 
 		isRestart = true;
 		
-		//타이머 정지
-		resetTimer();
-
-		Log.e(TAG, "onPause");
+		resetTimer();		
 	}
 	
+	/**
+	 * 타이머 설정을 초기화한다
+	 */
 	private void resetTimer() {
 		isInTimingShot = false;	
 		countPastTime = 0;
@@ -262,12 +301,12 @@ public class AC_Main extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-
 		Log.e(TAG, "onResume");
 
 		isFocusing = false;
 
 		if (isCliqSoundShutterON == true) {
+			//클리커 설정이 켜져있었을 경우 클리커를 시작한다
 			sendBroadcast(new Intent()
 					.setAction(Service_Cliq.ACTION_CLIQ_START));
 		}
@@ -281,85 +320,19 @@ public class AC_Main extends Activity {
 			isRestart = false;
 		}
 		
-		oel = new OrientationEventListener(AC_Main.this) {
+		
+		
+		// oel: 스마트폰의 각도를 계속적으로 모니터링한다.
+		orientationMonitor = new OrientationEventListener(AC_Main.this) {
 
 			@Override
 			public void onOrientationChanged(int orientation) {
-				//Log.e("test", "angle:" + orientation);
-				mAngle = orientation;
-				
-				/*if ((0 <= mAngle && mAngle < 60)
-						|| (300 <= mAngle && mAngle < 360)) { // 90도 회전
-					mSurface.mCamera.setDisplayOrientation(90);
-				} else if (60 <= mAngle && mAngle < 120) { // 180도 회전
-					mSurface.mCamera.setDisplayOrientation(180);
-				} else if (120 <= mAngle && mAngle < 240) { // 270도 회전
-					mSurface.mCamera.setDisplayOrientation(270);
-				} else if (240 <= mAngle && mAngle < 300) { // 그대로
-					mSurface.mCamera.setDisplayOrientation(0);
-				}*/
-				
-				//setCameraDisplayOrientation(AC_Main.this, whichCamera, mSurface.mCamera, angle);
+				mOrientation = orientation;
 			}
 		};
-		/*
-		 * if (isRestart == true) { finish(); startActivity(new Intent(this,
-		 * AC_Main.class)); }
-		 */
-
-		oel.enable();
+		orientationMonitor.enable();
 	}
 
-	public static void setCameraDisplayOrientation(Activity activity,
-			int cameraId, android.hardware.Camera camera, int angle) {
-		android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
-		android.hardware.Camera.getCameraInfo(cameraId, info);
-		int rotation = activity.getWindowManager().getDefaultDisplay()
-				.getRotation();
-		int degrees = 0;
-		
-		switch (rotation) {
-		case Surface.ROTATION_0:
-			degrees = 0;
-			break;
-		case Surface.ROTATION_90:
-			degrees = 90;
-			break;
-		case Surface.ROTATION_180:
-			degrees = 180;
-			break;
-		case Surface.ROTATION_270:
-			degrees = 270;
-			break;
-		}
-/*		
-		if ((0 <= angle && angle < 60) || (300 <= angle && angle < 360)) { // 90도회전
-			Log.e("CLIQ", "90");
-			degrees = 90;
-		} else if (60 <= angle && angle < 120) { // 180도 회전
-			Log.e("CLIQ", "180");
-			degrees = 180;
-		} else if (120 <= angle && angle < 240) { // 270도 회전
-			Log.e("CLIQ", "270");
-			degrees = 270;
-		} else if (240 <= angle && angle < 300) { // 그대로
-			Log.e("CLIQ", "0");
-			degrees = 0;
-		}
-
-		Log.e("CLIQ", "angle:" + angle);
-		Log.e("CLIQ", "degree:"+degrees);
-		*/
-		int result;
-		if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-			result = (info.orientation + degrees) % 360;
-			result = (360 - result) % 360; // compensate the mirror
-		} else { // back-facing
-			result = (info.orientation - degrees + 360) % 360;
-		}
-		camera.setDisplayOrientation(result);
-	}
-	
 	// =========================================================
 
 	@Override
@@ -379,19 +352,28 @@ public class AC_Main extends Activity {
 	}
 
 	// =======================================================
+	
 	private void initCameraBySharedPreference() {
 		// 셔터를 원래대로
 		btn_shutter.setImageDrawable(getResources().getDrawable(
 				R.drawable.c_shutter));
 
-		params = mSurface.mCamera.getParameters();
-
+		if(mSurface.mCamera.getParameters() != null) {
+			params = mSurface.mCamera.getParameters();
+		} else {
+			Log.e(TAG, "Error in load Camera Parameter(AC_Main.java::initCameraBySharedPreference())");
+		}
+		
+		//만약 params가 비어있으면 빠져나간다.. (이후 진행해도 소용 없음)
+		if(params == null) {
+			return;
+		}
+		
 		// 플래시 모드가 같은지 확인, 없으면 처음 것 적용
-
-		try {
-			if (mCameraParametes.getFlashMode() == null) {
+		/*try {
+			if (mCameraReadedParametes.getFlashMode() == null) {
 				mCameraPref.setFlashMode("off");
-			} else if (mCameraParametes.getFlashMode().indexOf(
+			} else if (mCameraReadedParametes.getFlashMode().indexOf(
 					mCameraPref.getFlashMode()) < 0) {
 				
 				if (whichCamera == Surface_Picture_Preview.CAMERA_FACE) {
@@ -403,7 +385,7 @@ public class AC_Main extends Activity {
 		} catch (Exception e) {
 			
 			Log.e(TAG, "mCameraPref == null :" + (mCameraPref == null));
-			Log.e(TAG, "mCameraParametes.getFlashMode() is "+mCameraParametes.getFlashMode());
+			Log.e(TAG, "mCameraParametes.getFlashMode() is "+mCameraReadedParametes.getFlashMode());
 			Log.e(TAG, "mCameraPref.getFlashMode() == null :"
 					+ (mCameraPref.getFlashMode() == null));
 			Log.e(TAG, "Error:" + e.getLocalizedMessage());
@@ -413,9 +395,9 @@ public class AC_Main extends Activity {
 
 		try {
 			// 초점 모드가 있는지 확인, 없으면 처음 것 적용
-			if (mCameraParametes.getFocusMode().indexOf(
+			if (mCameraReadedParametes.getFocusMode().indexOf(
 					mCameraPref.getFocusMode()) < 0) {
-				mCameraPref.setFocusMode(mCameraParametes.getFocusMode()
+				mCameraPref.setFocusMode(mCameraReadedParametes.getFocusMode()
 						.get(0));
 			}
 		} catch (Exception e) {
@@ -429,25 +411,15 @@ public class AC_Main extends Activity {
 
 			Log.e(TAG, "Error:" + e.getLocalizedMessage());
 			return;
-		}
+		}*/
 
-		// 사진 크기가 있는지 확인, 없으면 처음 것 적용
-		/*
-		 * if(whichCamera == mSurface.CAMERA_BACK) {
-		 * mCameraPref.setPictureSizes
-		 * (mCameraPref.getPictureSizes_BACK()[0],
-		 * mCameraPref.getPictureSizes_BACK()[1]); } else {
-		 * mCameraPref.setPictureSizes
-		 * (mCameraPref.getPictureSizes_FRONT()[0],
-		 * mCameraPref.getPictureSizes_FRONT()[1]); }
-		 */
 
 		if (whichCamera == Surface_Picture_Preview.CAMERA_BACK) {
 			mCameraPref.setFocusMode("auto");
 			mCameraPref.setFlashMode("auto");
 			// isSetCameraParameters = true;
 		} else {
-			mCameraPref.setFocusMode("infinity");
+			//mCameraPref.setFocusMode("infinity");
 			mCameraPref.setFlashMode("off");
 		}
 
@@ -459,6 +431,7 @@ public class AC_Main extends Activity {
 		params.setSceneMode(mCameraPref.getSceneMode());
 		params.setJpegQuality(100);
 		params.setWhiteBalance(mCameraPref.getWhiteBalance());
+		
 		int[] pictureSize = new int[2];
 		if (whichCamera == Surface_Picture_Preview.CAMERA_BACK) {
 			pictureSize = mCameraPref.getPictureSizes_BACK();
@@ -469,13 +442,25 @@ public class AC_Main extends Activity {
 		params.setPictureSize(pictureSize[0], pictureSize[1]);
 		
 		if (D) {
-			Log.i("smardi.Cliq", whichCamera + " width:" + pictureSize[0]
-					+ " height:" + pictureSize[1]);
+			String msg = "";
+			if(whichCamera == Surface_Picture_Preview.CAMERA_BACK) {
+				msg = "Camera: Back [";
+			} else {
+				msg = "Camera: Front [";
+			}
+			
+			Log.i("smardi.Cliq", msg + pictureSize[0] + " x " + pictureSize[1]+"]");
+		}
+		
+		if(D) {
+			Log.i(TAG, "Set parameter to Camera in AC_Main::initCameraBySharedPreference()");
 		}
 		mSurface.mCamera.setParameters(params);
 
+		if(D) {
+			Log.i(TAG, "Call changePreviewRatio() in AC_Main::initCameraBySharedPreference()");
+		}
 		changePreviewRatio();
-
 	}
 
 	// 효과음들을 불러온다.
@@ -552,8 +537,6 @@ public class AC_Main extends Activity {
 				.getDrawable(R.drawable.sound_sensitivity_bar);
 		sensitivityBarBitmap = bitmapDrawable.getBitmap();
 
-		// CLIQ.r 모드를 NONE으로 저장함
-		mCameraPref.setModeCLIQ(0);
 	}
 
 	private void eventRegist() {
@@ -654,7 +637,35 @@ public class AC_Main extends Activity {
 					 */
 					/*sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
 							Uri.parse("file://" + getFilesDir())));*/
-					Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+					
+					Intent intent = new Intent(Intent.ACTION_VIEW);
+					String targetDir = Environment.getExternalStorageDirectory().toString()
+					+ "/DCIM/Camera/"; // 특정 경로!!
+					
+					File list = new File(targetDir);
+					
+					String[] imgList = list.list(new FilenameFilter() {
+						long time_lastModified = 0;
+						@Override
+						public boolean accept(File dir, String filename) {
+							boolean bOK = false;
+							if(filename.toLowerCase().endsWith(".jpg")) {
+								File imgFile = new File(dir+"/"+filename);
+								if(time_lastModified < imgFile.lastModified()) {
+									bOK = true;
+									time_lastModified = imgFile.lastModified();
+								}
+							}
+							return bOK;
+						}
+					});
+					
+					
+					startActivity(intent.setDataAndType(Uri.fromFile(new File(targetDir + imgList[imgList.length-1])), MimeTypeMap.getSingleton().getMimeTypeFromExtension("jpg")));
+					//startActivity(new Intent(AC_Main.this, PicSelectActivity.class));
+					
+					
+					/*Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 					String targetDir = Environment
 							.getExternalStorageDirectory().toString()
 							+ "/DCIM/Camera"; // 특정 경로!!
@@ -666,7 +677,9 @@ public class AC_Main extends Activity {
 											.hashCode())).build();
 					
 					Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-					startActivityForResult(intent, ACTIVITY_GALLARY);
+					intent.addCategory(Intent.CATEGORY_DEFAULT);
+					intent.setType("image/jpg");
+					startActivityForResult(intent, ACTIVITY_GALLARY);*/
 				} catch (ActivityNotFoundException e) {
 
 					Toast.makeText(
@@ -755,13 +768,23 @@ public class AC_Main extends Activity {
 	
 
 	private void openSettingDialog() {
-		startActivityForResult(new Intent(AC_Main.this, PA_Setting.class),
-				ACTIVITY_SETTING);
+		mCameraPref.setWhichCamera(whichCamera);
+		Intent intent = new Intent(AC_Main.this, PA_Setting.class);
+		startActivityForResult(intent, ACTIVITY_SETTING);
+		
+		//설정 중에는 CLIQ.r 모드를 끈다
+		if(isCliqSoundShutterON == true) {
+			Toast.makeText(AC_Main.this, "설정 중에는 CLIQ.r 모드를 끕니다.", 1000).show();
+			
+			isCliqSoundShutterON = false;
+			setShutterMode();
+			setCliqSoundShutterONOFF();
+		}
 	}
 
 	View.OnTouchListener viewTouchListener = new View.OnTouchListener() {
 		int seekbar_init_X = 0;
-
+		
 		@Override
 		public boolean onTouch(View v, MotionEvent event) {
 			switch (v.getId()) {
@@ -773,7 +796,7 @@ public class AC_Main extends Activity {
 					// Toast.makeText(AC_Main.this, "UP", 1000).show();
 					// setShutterRelease(); //2012.05.20 주석처리함
 
-					if (mCameraParametes.getTimerTime() > 0) {
+					if (mCameraReadedParametes.getTimerTime() > 0) {
 						isInTimingShot = true;
 					} else {
 						mSoundManager.play(1);
@@ -897,25 +920,25 @@ public class AC_Main extends Activity {
 				mExif.setAttribute(ExifInterface.TAG_DATETIME,
 						new Date(System.currentTimeMillis()).toString());
 				
-				if ((0 <= mAngle && mAngle < 60)
-						|| (300 <= mAngle && mAngle < 360)) { // 90도 회전
+				if ((0 <= mOrientation && mOrientation < 60)
+						|| (300 <= mOrientation && mOrientation < 360)) { // 90도 회전
 					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
 							+ ExifInterface.ORIENTATION_ROTATE_90);
 					if(whichCamera == Surface_Picture_Preview.CAMERA_FACE) {
 						mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
 								+ ExifInterface.ORIENTATION_ROTATE_270);
 					}
-				} else if (60 <= mAngle && mAngle < 120) { // 180도 회전
+				} else if (60 <= mOrientation && mOrientation < 120) { // 180도 회전
 					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
 							+ ExifInterface.ORIENTATION_ROTATE_180);
-				} else if (120 <= mAngle && mAngle < 240) { // 270도 회전
+				} else if (120 <= mOrientation && mOrientation < 240) { // 270도 회전
 					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
 							+ ExifInterface.ORIENTATION_ROTATE_270);
 					if(whichCamera == Surface_Picture_Preview.CAMERA_FACE) {
 						mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
 								+ ExifInterface.ORIENTATION_ROTATE_90);
 					}
-				} else if (240 <= mAngle && mAngle < 300) { // 그대로
+				} else if (240 <= mOrientation && mOrientation < 300) { // 그대로
 					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
 							+ ExifInterface.ORIENTATION_NORMAL);
 				}
@@ -930,6 +953,15 @@ public class AC_Main extends Activity {
 				isGalleryEmpty = false;
 				updateThumbnail(tempBmp);
 				tempBmp = null;
+				
+				Log.d(TAG, "Media Scanner!!!!!");
+				sendBroadcast(new Intent(
+						Intent.ACTION_MEDIA_MOUNTED,
+						Uri.parse("file://" + Environment.getExternalStorageDirectory())));
+				
+				
+				isTakingPhoto = false;	//사진 찍는 중 끝낫음
+				
 			} catch (IOException e) {
 				Toast.makeText(AC_Main.this,
 						"Error occured while Saving the picture", 1000).show();
@@ -1083,17 +1115,21 @@ public class AC_Main extends Activity {
 			int screen_w = display.getWidth();
 			int screen_h = display.getHeight();
 			
+			int picture_w = params.getPictureSize().width;
+			int picture_h = params.getPictureSize().height;
+			
+			
 			Size opti = null;
 			
 			
 			
 			List<Size> arSize = params.getSupportedPreviewSizes();
 			if (D) {
-				Log.e("CLIQ", "Called changePreviewRatio()");
-				Log.e("CLIQ", "Picture size:"+params.getPictureSize().width + " x "+params.getPictureSize().height);
+				Log.e(TAG, "Called changePreviewRatio()");
+				Log.e(TAG, "Picture size:" + picture_w + " x "+picture_h);
 				
 				for (Size size : arSize) {
-					Log.i("CLIQ", "preview:" + size.width + " x "
+					Log.i(TAG, "preview:" + size.width + " x "
 							+ size.height);
 				}
 			}
@@ -1136,57 +1172,44 @@ public class AC_Main extends Activity {
 
 			// -----------------------------------------------------------------
 			
-			if (true) {
-				Log.e("smardi.Cliq", "opti.w:" + opti.width + " opti.h:"
-						+ opti.height);
-			}
 			
 			mSurface.mCamera.setParameters(params);
 			mSurface.mCamera.startPreview();
 	
-			//mSurface.mCamera.setCameraParameters(params);
-			//isSetCameraParameters = true;
-	
-			//isLoadCameraparameterSuccese = true;
-	
-			// 화면이 갱신된 것을 방송으로 전달
-			//sendBroadcast(new Intent().setAction(mSurface.ACTION_SURFACE_CHANGED));
-		
-			int preview_w = 0;
-			int preview_h = 0;
-			
-	/*		int[] camera_size = new int[2];
-	
-			if (whichCamera == mSurface.CAMERA_FACE) {
-				camera_size = mCameraPref.getPictureSizes_FRONT();
-			} else {
-				camera_size = mCameraPref.getPictureSizes_BACK();
-			}
-	
-			int camera_w = camera_size[0];
-			int camera_h = camera_size[1];
 	
 			int preview_w = 0;
 			int preview_h = 0;
-	
-			if ((float) camera_w / (float) camera_h > (float) screen_w
+					
+			if ((float) opti.width / (float) opti.height > (float) screen_w
 					/ (float) screen_h) {
 				// 사진 해상도가 화면보다 가로로 더 길 때
 				preview_w = screen_w;
-				preview_h = (int) Math.round(camera_h * screen_w / camera_w);
+				preview_h = (int) Math.round(opti.height * screen_w / opti.width);
 			} else {
 				// 사진 해상도가 화면보다 세로로 더 길 때
 				preview_h = screen_h;
-				preview_w = (int) Math.round(camera_w * screen_h / camera_h);
-			}*/
-	
-			preview_w = opti.width;
-			preview_h = opti.height;
+				preview_w = (int) Math.round(opti.width * screen_h / opti.height);
+			}
+			
+			float tempWidth = picture_w;
+			float tempHeight = picture_h;
+
+			if ((float) tempWidth / (float) tempHeight > (float) screen_w / (float) screen_h) {
+				// 사진 해상도가 화면보다 가로로 더 길 때
+				preview_w = screen_w;
+				preview_h = (int) Math.round(tempHeight * screen_w / tempWidth);
+			} else {
+				// 사진 해상도가 화면보다 세로로 더 길 때
+				preview_h = screen_h;
+				preview_w = (int) Math.round(tempWidth * screen_h / tempHeight);
+			}
+			
 			
 			if(D) {
-				//Log.e("smardi.Cliq", "cw:" + camera_w + " ch:" + camera_h);
-				Log.e("smardi.Cliq", "sw:" + screen_w + " sh:" + screen_h);
-				Log.e("smardi.Cliq", "pw:" + preview_w + " ph:" + preview_h);
+				Log.i(TAG, "[changePreviewRatio picture size  ]" + picture_w + " x " + picture_h + " r:"+((float)picture_w/(float)picture_h));
+				Log.i(TAG, "[changePreviewRatio screen size   ]" + screen_w + " x " + screen_h);
+				Log.i(TAG, "[changePreviewRatio preview size  ]" + preview_w + " x " + preview_h + " r:"+((float)preview_w/(float)preview_h));
+				Log.i(TAG, "[changePreviewRatio optimized size]" + opti.width + " x " + opti.height + " r:"+((float)opti.width/(float)opti.height));
 			}
 	
 			LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
@@ -1200,9 +1223,9 @@ public class AC_Main extends Activity {
 	
 			params = (LayoutParams) mSurface.getLayoutParams();
 		} catch (RuntimeException e) {
-			Log.e("CLIQ", "RuntimeException in changePreviewRatio():"+e.getLocalizedMessage());
-			retrySetPreviewSize = true;
-			time_SetPreviewSizeFailed = new Date().getTime();
+			Log.e(TAG, "RuntimeException in changePreviewRatio():"+e.getLocalizedMessage());
+			//retrySetPreviewSize = true;
+			//time_SetPreviewSizeFailed = new Date().getTime();
 		}
 	}
 
@@ -1241,7 +1264,7 @@ public class AC_Main extends Activity {
 		if(isInTimingShot == true) {
 			return;
 		}
-		int delayTime = mCameraParametes.getTimerTime();
+		int delayTime = mCameraReadedParametes.getTimerTime();
 		Drawable timerDrawable = null;
 		switch (delayTime) {
 		case 0:
@@ -1261,7 +1284,7 @@ public class AC_Main extends Activity {
 			timerDrawable = getResources().getDrawable(R.drawable.c_timer_0);
 			break;
 		}
-		mCameraParametes.setTimerTime(delayTime);
+		mCameraReadedParametes.setTimerTime(delayTime);
 		btn_timer.setImageDrawable(timerDrawable);
 	}
 
@@ -1373,13 +1396,15 @@ public class AC_Main extends Activity {
 			}
 		});
 		
-		if(imgList.length == 0) {
+		if(imgList == null || imgList.length == 0) {
 			isGalleryEmpty = true;
 			
 			updateThumbnail(BitmapFactory.decodeResource(getResources(), R.drawable.img_none));
 		} else {
-			//Bitmap thumbBitmap = Bitmap.createBitmap(targetDir + imgList[imgList.length-1]);
-			Bitmap thumbBitmap = BitmapFactory.decodeFile(targetDir + "/"+imgList[imgList.length-1]);
+			//이미지를 축소해서 불러온다.
+			BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inSampleSize = 16;
+			Bitmap thumbBitmap = BitmapFactory.decodeFile(targetDir + "/"+imgList[imgList.length-1], options);
 			updateThumbnail(thumbBitmap);
 		}
 		/*
@@ -1437,10 +1462,10 @@ public class AC_Main extends Activity {
 
 		btn_gallary.setImageBitmap(resized);
 
-		Log.d(TAG, "Media Scanner!!!!!");
+		/*Log.d(TAG, "Media Scanner!!!!!");
 		sendBroadcast(new Intent(
 				Intent.ACTION_MEDIA_MOUNTED,
-				Uri.parse("file://" + Environment.getExternalStorageDirectory())));
+				Uri.parse("file://" + Environment.getExternalStorageDirectory())));*/
 
 	}
 
@@ -1519,16 +1544,18 @@ public class AC_Main extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 
-		Log.e("VJV", "visible:"+tutorial.getVisibility());
 		if(resultCode == 2) {
 			tutorial.setVisibility(View.VISIBLE);
-			Log.e("VJV", "visible:"+tutorial.getVisibility());
 		}
 		
 		// Bundle extras = data.getExtras();
 		switch (requestCode) {
 		case ACTIVITY_SETTING:
-			initCameraBySharedPreference();
+			if(mCameraPref.getStateSendEmail() == true) {
+				mCameraPref.setStateSendEmail(false);
+			} else {
+				initCameraBySharedPreference();
+			}
 			break;
 		case ACTIVITY_GALLARY:
 			updateThumbnail();
@@ -1591,10 +1618,13 @@ public class AC_Main extends Activity {
 		}
 	}
 
+	
+	boolean isTakingPhoto = false;	//사진 찍고 있는 중인지
+	
 	// 카메라 관련
 	@SuppressWarnings("static-access")
 	private void autoFocus() {
-		if (isFocusing == true) {
+		if (isFocusing == true && whichCamera == Surface_Picture_Preview.CAMERA_BACK) {
 			// 포커싱 중이면 빠져나간다.
 			return;
 		}
@@ -1611,7 +1641,12 @@ public class AC_Main extends Activity {
 			// stateCamera = STATE_CAMERA_FOCUSING;
 			// mSoundManager.play(2);
 			mSoundManager.play(6);
-			mSurface.mCamera.autoFocus(mAutoFocus);
+			try {
+				mSurface.mCamera.autoFocus(mAutoFocus);
+			} catch(RuntimeException e) {
+				Log.e(TAG, "AC_Main::autoFocus() "+e.getLocalizedMessage());
+				isFocusing = false;
+			}
 			if (D) {
 				Toast.makeText(AC_Main.this, "Focus!", 1000).show();
 			}
@@ -1638,27 +1673,35 @@ public class AC_Main extends Activity {
 				Log.e("smardi.Cliq", "ERROR:" + e.getLocalizedMessage());
 			}
 		} else {
+			
+			if((whichCamera == Surface_Picture_Preview.CAMERA_FACE) && (isTakingPhoto == true)) {
+				
+			} else {
+			
+				isTakingPhoto = true;
+				isFocusing = false;
+				mSoundManager.play(1);
+				takePicture();
+	
+				Log.e(TAG, "User commanded AUTOFOCUS, but camera not ready"
+						+ stateCamera);
 			isFocusing = false;
-			mSoundManager.play(1);
-			takePicture();
-
-			Log.e(TAG, "User commanded AUTOFOCUS, but camera not ready"
-					+ stateCamera);
-			isFocusing = false;
+			}
 		}
 	}
 
 	private void takePictureByTrigger() {
 		if (stateCamera == STATE_CAMERA_READY) {
-			if (mCameraParametes.getTimerTime() > 0) {
+			if (mCameraReadedParametes.getTimerTime() > 0) {
 				isInTimingShot = true;
 			} else {
 				// takePicture(); 수정 5월 19일
+				
 				autoFocus();
 				isFocusedByCliq = true;
 			}
 		} else if (stateCamera == STATE_VIDEO_READY && isRecording == false) {
-			if (mCameraParametes.getTimerTime() > 0) {
+			if (mCameraReadedParametes.getTimerTime() > 0) {
 				isInTimingShot = true;
 			} else {
 				takeVideo();
@@ -1696,8 +1739,7 @@ public class AC_Main extends Activity {
 	}
 
 	private void takePicture() {
-		Log.e(TAG, "isFocusing:" + isFocusing);
-
+		
 		if (isFocusing == false && isTakingPicture == false) {
 			stateCamera = STATE_CAMERA_TAKING_TIMING_PHOTO;
 
@@ -1878,7 +1920,7 @@ public class AC_Main extends Activity {
 					// 클리커가 눌린 것이 감지되면
 					if (new Date().getTime() - timeCliqPressed > TIME_LONGCLICK) {
 						
-						if(mCameraParametes.getTimerTime() > 0) {
+						if(mCameraReadedParametes.getTimerTime() > 0) {
 							isInTimingShot = true;
 						} else if(isInTimingShot == false) {
 							mHandler.sendEmptyMessage(WHAT_AUTOFOCUSING);
@@ -1889,10 +1931,10 @@ public class AC_Main extends Activity {
 
 				if (mSurface.isSetCameraParameters == true
 						&& isSetCameraParameters == false) {
-					if (mCameraParametes == null) {
-						mCameraParametes = mSurface.mCameraParameters;
+					if (mCameraReadedParametes == null) {
+						mCameraReadedParametes = mSurface.mCameraParameters;
 						//타이머를 0으로 초기화
-						mCameraParametes.setTimerTime(0);
+						mCameraReadedParametes.setTimerTime(0);
 					}
 
 					isSetCameraParameters = true;
@@ -1927,10 +1969,10 @@ public class AC_Main extends Activity {
 				// 타이머 설정을 적용한다.
 				if (isInTimingShot == true) {
 					Log.e(TAG, "time:" + countPastTime + " timer:"
-							+ mCameraParametes.getTimerTime());
+							+ mCameraReadedParametes.getTimerTime());
 
 					countPastTime += sleepTime;
-					int remainTime = mCameraParametes.getTimerTime() * 1000
+					int remainTime = mCameraReadedParametes.getTimerTime() * 1000
 							- countPastTime;
 					// 남은 시간을 나타내준다.
 					Message msg = new Message();

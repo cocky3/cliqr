@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.smardi.Cooliq.R"
-    android:versionCode="22"
-    android:versionName="1.32" >
+    android:versionCode="30"
+    android:versionName="1.391" >
 
     <uses-sdk android:minSdkVersion="10" />
 
@@ -38,15 +38,15 @@
 
         <service android:name="org.smardi.CliqService.Service_Cliq" >
         </service>
-
+		
         <activity
             android:name="AC_Main"
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" >
         </activity>
         <activity
-            android:label="@string/setting_title"
             android:name="PA_Setting"
+            android:label="@string/setting_title"
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" >
         </activity>
@@ -65,6 +65,11 @@
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.Dialog" >
         </activity>
+        <activity
+            android:name=".Gallary.PicSelectActivity"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" >
+        </activity>
     </application>
-	
+
 </manifest>

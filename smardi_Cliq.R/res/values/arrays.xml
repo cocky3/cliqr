@@ -22,6 +22,22 @@
         <item>석양</item>
         <item>화사한</item>
     </string-array>
+    <string-array name="continuousShooting_en">
+    	<item>1</item>
+    	<item>3</item>
+    	<item>5</item>
+    	<item>8</item>
+    	<item>12</item>
+    	<item>20</item>    
+    </string-array>
+    <string-array name="continuousShooting_ko">
+    	<item>1</item>
+    	<item>3</item>
+    	<item>5</item>
+    	<item>8</item>
+    	<item>12</item>
+    	<item>20</item>    
+    </string-array>
     <string-array name="sceneMode_en">
         <item>action</item>
         <item>auto</item>

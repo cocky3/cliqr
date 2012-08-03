@@ -68,7 +68,7 @@ public class AC_Dialog_CLIQr_Register extends Activity {
 
 	private void initComponent() {
 		img_cliqr = (ImageView) findViewById(R.id.img_cliqr);
-		btn_cancel = (Button) findViewById(R.id.btn_cancel);
+		btn_cancel = (Button) findViewById(R.id.btn_regist_cancel);
 		regist_progress = (TextView)findViewById(R.id.regist_progress);
 		
 		listFrequency = new ArrayList<CollectedFreqency>();
@@ -85,7 +85,7 @@ public class AC_Dialog_CLIQr_Register extends Activity {
 		@Override
 		public void onClick(View v) {
 			switch (v.getId()) {
-			case R.id.btn_cancel:
+			case R.id.btn_regist_cancel:
 				exit();
 			}
 		}
@@ -169,6 +169,9 @@ public class AC_Dialog_CLIQr_Register extends Activity {
 		}
 		
 		int progress = tempMaxCount * 100/MAX_COUNT;
+		if(100 < progress) {
+			progress = 100;
+		}
 		regist_progress.setText(progress+"%");
 		
 		if(99 < progress) {

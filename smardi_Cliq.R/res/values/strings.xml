@@ -49,8 +49,10 @@
     <string name="setting_change_sensitivity_title">Change sensitivity</string>
     <string name="setting_title_tutorial">Tutorial</string>
     <string name="setting_content_tutorial">Review tutorial</string>
-    <string name="setting_title_explain_component">화면 구성 확인</string>
-    <string name="setting_content_explain_component">CLIQ.r의 화면 구성을 확인합니다.</string>
+    <string name="setting_title_explain_component">Review the screen</string>
+    <string name="setting_content_explain_component">Review components on screen of CLIQ.r</string>
+    <string name="setting_title_send_email">Send e-mail to developer</string>
+    <string name="setting_content_send_email">Report about CLIQ.r</string>
     <string name="setting_registration_content">Regist the signal of CLIQ.r</string>
     <string name="setting_communication_test_content">Test communication with CLIQ.r</string>
     <string name="setting_change_sensitivity_content">Change the sensing sensitivity of the signal received from CLIQ.r</string>
@@ -72,4 +74,13 @@
     
     <!-- 갤러리에 사진이 없을 때 -->
     <string name="there_is_no_picture">There is no picture</string>
+    
+    <!-- 갤러리 -->
+    <string name="picture">Picture</string>
+    <string name="select_intro">Long-press a thumbnail to add an image</string>
+	<string name="show_intro">Press a thumbnail to display at larger size</string>
+	
+	<!-- 민감도 -->
+    <string name="sensitivity_senstive">Sensitive</string>
+    <string name="sensitivity_insenstive">Insensitive</string>
 </resources>
