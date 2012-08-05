@@ -48,6 +48,7 @@ public class PA_Setting extends PreferenceActivity {
 	private final String KEY_CAMERA_COLOREFFECT = "org.smardi.cliq.coloreffect";
 	private final String KEY_CAMERA_PICTURESIZE_BACK = "org.smardi.cliq.picturesize.back";
 	private final String KEY_CAMERA_PICTURESIZE_FRONT = "org.smardi.cliq.picturesize.front";
+	private final String KEY_CAMERA_CONTINUOUSSHOOTING = "org.smardi.cliq.continuousShooting";
 	
 	private final String KEY_TUTORIAL = "org.smardi.cliq.tutorial";
 	private final String KEY_ExplainComponent = "org.smardi.cliq.explainComponent";
@@ -354,10 +355,10 @@ public class PA_Setting extends PreferenceActivity {
 				
 				// 카메라 장면모드++++++++
 				list_Camera_ContinuousShooting = new ListPreference(this);
-				list_Camera_ContinuousShooting.setKey(KEY_CAMERA_SCENEMODE);
+				list_Camera_ContinuousShooting.setKey(KEY_CAMERA_CONTINUOUSSHOOTING);
 		
 				// 모드를 한글로 바꾼다
-				String[] translatedContinuousShootingList = mCameraPref.getContinuousShooting();
+				String[] translatedContinuousShootingList = mCameraPref.getContinuousShootingList();
 				String[] continuousShooting_en = getResources().getStringArray(
 						R.array.continuousShooting_en);
 				String[] continuousShooting_ko = getResources().getStringArray(
@@ -375,25 +376,25 @@ public class PA_Setting extends PreferenceActivity {
 				if(getString(R.string.language).equals("ko")== true) {
 					list_Camera_ContinuousShooting.setEntries(translatedContinuousShootingList);
 				} else {
-					list_Camera_ContinuousShooting.setEntries(mCameraPref.getSceneModeList());
+					list_Camera_ContinuousShooting.setEntries(mCameraPref.getContinuousShootingList());
 				}
 				
-				list_Camera_ContinuousShooting.setEntryValues(mCameraPref.getSceneModeList());
+				list_Camera_ContinuousShooting.setEntryValues(mCameraPref.getContinuousShootingList());
 				list_Camera_ContinuousShooting
-						.setDialogTitle(getString(R.string.setting_scene_mode_title));
+						.setDialogTitle(getString(R.string.setting_continuous_shooting_title));
 				list_Camera_ContinuousShooting
-						.setTitle(getString(R.string.setting_scene_mode_title));
+						.setTitle(getString(R.string.setting_continuous_shooting_title));
 		
-				String summarySceneMode = mCameraPref.getSceneMode();
+				String summaryContinuousShooting = mCameraPref.getContinuousShooting();
 				
 				if(getString(R.string.language).equals("ko")== true) {
-					summarySceneMode = translateSceneMode(summarySceneMode);
+					summaryContinuousShooting = translateSceneMode(summaryContinuousShooting);
 				}
 		
-				list_Camera_SceneMode.setSummary(summarySceneMode);
-				cameraPrefCat.addPreference(list_Camera_SceneMode);
+				list_Camera_ContinuousShooting.setSummary(summaryContinuousShooting);
+				cameraPrefCat.addPreference(list_Camera_ContinuousShooting);
 				
-				list_Camera_SceneMode.setOnPreferenceClickListener(onPreferenceClickListener);
+				list_Camera_ContinuousShooting.setOnPreferenceClickListener(onPreferenceClickListener);
 			}
 		}
 		
@@ -627,6 +628,19 @@ public class PA_Setting extends PreferenceActivity {
 				
 				if (D) {
 					Log.i(TAG, "Color effect:" + value);
+				}
+			}
+			
+			//연속 촬영
+			else if(key.equals(KEY_CAMERA_CONTINUOUSSHOOTING)) {
+				String value = sharedPreferences.getString(
+						KEY_CAMERA_CONTINUOUSSHOOTING, "");
+				list_Camera_ContinuousShooting.setSummary(value);
+
+				mCameraPref.setContinuousShooting(value);
+				
+				if (D) {
+					Log.i(TAG, "Continuous Shooting:" + value);
 				}
 			}
 

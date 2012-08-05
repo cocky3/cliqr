@@ -57,6 +57,7 @@
     <string name="setting_communication_test_content">Test communication with CLIQ.r</string>
     <string name="setting_change_sensitivity_content">Change the sensing sensitivity of the signal received from CLIQ.r</string>
     <string name="setting_scene_mode_title">Scene mode</string>
+    <string name="setting_continuous_shooting_title">Continuous shooing</string>
     <string name="setting_white_balance_title">Whitte balance</string>
     <string name="setting_color_effect_title">Color effect</string>
     <string name="setting_rear_resolution_title">Rear-facing camera resolution</string>

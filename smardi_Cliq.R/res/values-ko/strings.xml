@@ -57,6 +57,7 @@
     <string name="setting_communication_test_content">CLIQ.r과의 연결을 테스트합니다.</string>
     <string name="setting_change_sensitivity_content">CLIQ.r의 신호를 인식하는 민감도를 설정합니다.</string>
     <string name="setting_scene_mode_title">장면 모드 설정</string>
+    <string name="setting_continuous_shooting_title">연속 촬영</string>
     <string name="setting_white_balance_title">화이트 벨런스</string>
     <string name="setting_color_effect_title">색조 효과</string>
     <string name="setting_rear_resolution_title">후면 카메라 해상도</string>

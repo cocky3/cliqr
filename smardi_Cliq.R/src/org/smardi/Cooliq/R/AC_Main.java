@@ -187,7 +187,16 @@ public class AC_Main extends Activity {
 	private boolean retrySetPreviewSize = false;
 	private long time_SetPreviewSizeFailed = 0;
 	
-	//설정 액티비티를 종료하기 위해서  
+	//연사 촬영 수
+	private int continuousShootingNum = 1;
+	
+	//남은 연사 촬영 수
+	private int continuousShootingRemain = -1;
+	
+	//연사가 시작됐는지
+	private boolean isContinuousShooting = false;
+	
+	
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -638,6 +647,7 @@ public class AC_Main extends Activity {
 					/*sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
 							Uri.parse("file://" + getFilesDir())));*/
 					
+					/*
 					Intent intent = new Intent(Intent.ACTION_VIEW);
 					String targetDir = Environment.getExternalStorageDirectory().toString()
 					+ "/DCIM/Camera/"; // 특정 경로!!
@@ -663,7 +673,15 @@ public class AC_Main extends Activity {
 					
 					startActivity(intent.setDataAndType(Uri.fromFile(new File(targetDir + imgList[imgList.length-1])), MimeTypeMap.getSingleton().getMimeTypeFromExtension("jpg")));
 					//startActivity(new Intent(AC_Main.this, PicSelectActivity.class));
+					*/
 					
+					//zmin2 gallary
+					Intent i = new Intent(Intent.ACTION_PICK);
+					i.setType(android.provider.MediaStore.Images.Media.CONTENT_TYPE);
+					i.setData(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI); // images on the SD card.
+
+					// 결과를 리턴하는 Activity 호출
+					startActivityForResult(i, ACTIVITY_GALLARY);
 					
 					/*Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 					String targetDir = Environment
@@ -800,6 +818,7 @@ public class AC_Main extends Activity {
 						isInTimingShot = true;
 					} else {
 						mSoundManager.play(1);
+						isContinuousShooting = true;
 						takePicture();
 					}
 				}
@@ -844,6 +863,7 @@ public class AC_Main extends Activity {
 			if (isFocusedByCliq == true) {
 				mSoundManager.play(5);
 				takePicture(); // 2012년 5월 19일 수정
+				isContinuousShooting = true;
 				isFocusedByCliq = false;
 			} else {
 				mSoundManager.play(4);
@@ -897,6 +917,8 @@ public class AC_Main extends Activity {
 	PictureCallback mPicture = new PictureCallback() {
 		@Override
 		public void onPictureTaken(byte[] data, Camera camera) {
+			
+		
 			File file = new File(getPhotoFilename());
 
 			// whiteScreen.setVisibility(View.VISIBLE);
@@ -969,6 +991,7 @@ public class AC_Main extends Activity {
 						"Error occured while Saving the picture: "
 								+ e.getLocalizedMessage());
 			}
+		
 
 			// 셔터 버튼 이미지를 원래대로
 			btn_shutter.setImageDrawable(getResources().getDrawable(
@@ -977,6 +1000,18 @@ public class AC_Main extends Activity {
 			mSurface.resumePreview();
 			stateCamera = STATE_CAMERA_READY;
 			isTakingPicture = false;
+			
+			if(continuousShootingRemain == -1 && isContinuousShooting == true) {
+				//아직 남은 사진이 개수가 설정되지 않았으므로 연사 시작
+				continuousShootingRemain = continuousShootingNum - 2;
+				isContinuousShooting = false;
+			}
+			
+			if(0 <= continuousShootingRemain) {
+				continuousShootingRemain -= 1;
+				mSoundManager.play(1);
+				takePicture();
+			}
 		}
 	};
 
@@ -1559,6 +1594,13 @@ public class AC_Main extends Activity {
 			break;
 		case ACTIVITY_GALLARY:
 			updateThumbnail();
+			
+			if(resultCode == Activity.RESULT_OK) {
+				Uri uri = data.getData(); 
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(uri, "image/*");
+                startActivity(intent); 
+			}
 			break;
 		}
 	}
@@ -1681,6 +1723,7 @@ public class AC_Main extends Activity {
 				isTakingPhoto = true;
 				isFocusing = false;
 				mSoundManager.play(1);
+				isContinuousShooting = true;
 				takePicture();
 	
 				Log.e(TAG, "User commanded AUTOFOCUS, but camera not ready"
@@ -1725,6 +1768,7 @@ public class AC_Main extends Activity {
 			if (stateCamera == STATE_CAMERA_READY) {
 				mSoundManager.play(5);
 				takePicture();
+				isContinuousShooting = true;
 				isTimerON = false;
 			} else if (stateCamera == STATE_VIDEO_READY) {
 				takeVideo();
@@ -1739,6 +1783,9 @@ public class AC_Main extends Activity {
 	}
 
 	private void takePicture() {
+		
+		//연사 숫자를 불러온다
+		continuousShootingNum = Integer.parseInt(mCameraPref.getContinuousShooting());
 		
 		if (isFocusing == false && isTakingPicture == false) {
 			stateCamera = STATE_CAMERA_TAKING_TIMING_PHOTO;

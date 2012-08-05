@@ -89,6 +89,18 @@ public class Manage_Camera_SharedPreference {
 		return mPref.getString("sceneMode", "auto");
 	}
 	
+
+	public void setContinuousShooting(String sceneMode) {
+		mEditor.putString("ContinuousShooting", sceneMode);
+		mEditor.commit();
+	}
+
+
+	public String getContinuousShooting() {
+		return mPref.getString("ContinuousShooting", "1");
+	}
+	
+	
 	/**
 	 * 카메라 정보로부터 가져온 설정들을 쉼표(,)로 구분된 String으로 저장한다.
 	 * @param sceneMode 카메라에서 가져온 설정 정보
@@ -124,7 +136,7 @@ public class Manage_Camera_SharedPreference {
 	
 	//-----------------------------------
 	//연속 촬영 개수
-	public void setContinuousShooting(List<Integer> continuousShooting) {
+	public void setContinuousShootingList(List<Integer> continuousShooting) {
 		String value = "";
 		
 		for (int i=0; i<continuousShooting.size(); i++) {
@@ -141,9 +153,9 @@ public class Manage_Camera_SharedPreference {
 	
 	public String[] getContinuousShootingList() {
 		String[] value = null;
-		String tempValue = mPref.getString("continuousShootingList", "");
+		String tempValue = "1,3,5,7,10,15,20";
 		
-		value = tempValue.split("");
+		value = tempValue.split(",");
 		
 		return value;
 	}
