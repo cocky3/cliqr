@@ -196,7 +196,9 @@ public class AC_Main extends Activity {
 	//연사가 시작됐는지
 	private boolean isContinuousShooting = false;
 	
-	
+	//외부 프로그램에서 촬영 호출
+	Uri mSaveUri = null;
+	private ContentResolver mContentResolver;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -263,6 +265,13 @@ public class AC_Main extends Activity {
 				setCliqSoundShutterONOFF();
 			}
 		}.start();
+		
+		//외부에서 카메라 호출했는지
+		if(isImageCaptureIntent()) {
+			setupCaptureParams();
+		}
+		
+		mContentResolver = getContentResolver();
 	}
 
 	
@@ -360,6 +369,20 @@ public class AC_Main extends Activity {
 	}
 
 	// =======================================================
+	 private boolean isImageCaptureIntent() {
+		 String action = getIntent().getAction();
+		 return (MediaStore.ACTION_IMAGE_CAPTURE.equals(action));
+	 }
+	 
+	private void setupCaptureParams() {
+		Bundle myExtras = getIntent().getExtras();
+		if (myExtras != null) {
+			mSaveUri = (Uri) myExtras.getParcelable(MediaStore.EXTRA_OUTPUT);
+			//mCropValue = myExtras.getString("crop");
+		} 
+	}
+	
+	
 	
 	private void initCameraBySharedPreference() {
 		// 셔터를 원래대로
@@ -914,11 +937,26 @@ public class AC_Main extends Activity {
 	PictureCallback mPicture = new PictureCallback() {
 		@Override
 		public void onPictureTaken(byte[] data, Camera camera) {
-			
+
+			if (mSaveUri != null) {
+				OutputStream outputStream = null;
+				try {
+					outputStream = mContentResolver.openOutputStream(mSaveUri);
+					outputStream.write(data);
+					outputStream.close();
+
+					setResult(RESULT_OK);
+					finish();
+				} catch (IOException ex) {
+					// ignore exception
+				} finally {
+					//Util.closeSilently(outputStream);
+				}
+			}
 		
 			String filename = getPhotoFilename();
 			File file = new File(filename);
-
+			
 			// whiteScreen.setVisibility(View.VISIBLE);
 			try {
 				// 방향에 맞게 이미지 회전하기
