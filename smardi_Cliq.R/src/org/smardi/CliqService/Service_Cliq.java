@@ -44,7 +44,7 @@ public class Service_Cliq extends Service {
 	private int sampleRate = 44100;
 
 	// Audio input block size, in samples.
-	private int inputBlockSize = 1024;
+	private int inputBlockSize = 2048;
 
 	// The selected windowing function.
 	private org.hermit.audalyzer.Window.Function windowFunction = org.hermit.audalyzer.Window.Function.GAUSS;
@@ -170,7 +170,7 @@ public class Service_Cliq extends Service {
 	// 대부분 1회성 신호에 그침.
 	// 3회에 걸쳐서 동일한 신호가 들어오는 경우에는 클리커에서 신호가 발생한 것으로 감지하도록 수정
 	private int count_cliq_occured = 0; // 클리커가 눌렸음을 감지한 횟수
-	private int CRIT_CLIQ_OCCURED = 3; // 노이즈와 클리커의 신호를 구분하기 위한 변수
+	private int CRIT_CLIQ_OCCURED = 1; // 노이즈와 클리커의 신호를 구분하기 위한 변수
 
 	// -------------------------------------
 	private long time_start_recording = 0;	//recording이 시작된 시간
@@ -376,11 +376,39 @@ public class Service_Cliq extends Service {
 
 	
 	float MINMIN = Float.MAX_VALUE;
+	int countPressed = 0;
+	final int MAX_COUNT_PRESS = 2;
+	
 	
 	protected boolean checkIsCliqingOccured() {
+		float powerCliqr = (float) (getCliqFrequencyPower());// - 3E-5);
+		float powerThred = (float) (getCliqThreadhold());// - (3E-5));
+		
+		int cliqSensitivity = mSharedPreference.getCliqSensitivity();
+		
+		float multiple = 0;
+		
+		multiple = getDB(powerCliqr)/getDB(powerThred); 
+		
+		if(1.01 + ((float)cliqSensitivity/10000. * 16.) < multiple) {
+			countPressed += 1;
+		} else {
+			countPressed = 0;
+			return false;
+		}
+		
+		Log.e(TAG, "count:"+countPressed);
+		
+		if(MAX_COUNT_PRESS <= countPressed) {
+			return true;
+		} else {
+			return false;
+		}
+		
+		/*
 		float cliqFrequencyPower = getCliqFrequencyPower();
 
-		int cliqSensitivity = mSharedPreference.getCliqSensitivity();
+		
 
 		if (getDB(cliqFrequencyPower) < 0) {
 			return false;
@@ -396,7 +424,7 @@ public class Service_Cliq extends Service {
 		}
 		
 		if ((double) getDB(cliqFrequencyPower) - MINMIN > (double) (getDB(getCliqThreadhold()) - MINMIN)
-				* (1.05 + (double) cliqSensitivity / 100./2)) {
+				* (1.15 + (double) cliqSensitivity / 100./2)) {
 
 			//-------------------------------------------------
 			//로그파일 작성
@@ -430,7 +458,7 @@ public class Service_Cliq extends Service {
 			return true;
 		} else {
 			return false;
-		}
+		}*/
 	}
 
 	private void saveFrequency(String filename, String content) {
@@ -487,16 +515,16 @@ public class Service_Cliq extends Service {
 	}
 	
 	private float getCliqFrequencyPower() {
-		int LOW_FREQ = mSharedPreference.getCliqFrequency() - 150;
-		int HIGH_FREQ = mSharedPreference.getCliqFrequency() + 150;
-
-		if (HIGH_FREQ > 22050) {
-			HIGH_FREQ = 22050;
+		int LOW_INDEX = mSharedPreference.getCliqFrequencyIndex() - 0;
+		int HIGH_INDEX = mSharedPreference.getCliqFrequencyIndex() + 0;
+		
+		
+		if(D) {
+			Log.e(TAG, "LF:"+convertIndextToFrequency(LOW_INDEX));
+			Log.e(TAG, "CF:" + mSharedPreference.getCliqFrequencyIndex() + " " +convertIndextToFrequency(mSharedPreference.getCliqFrequencyIndex()) + " 2:"+mSharedPreference.getCliqFrequency());
+			Log.e(TAG, "RF:"+convertIndextToFrequency(HIGH_INDEX));
 		}
-
-		int LOW_INDEX = convertFrequencyToIndex(LOW_FREQ);
-		int HIGH_INDEX = convertFrequencyToIndex(HIGH_FREQ);
-
+		
 		float max = 0;
 		int maxINDEX = 0;
 
@@ -517,7 +545,7 @@ public class Service_Cliq extends Service {
 			}
 		}
 
-		mSharedPreference.setCliqTempFrequencyIndex(maxINDEX);
+		//mSharedPreference.setCliqTempFrequencyIndex(maxINDEX);
 
 		return max;
 	}
@@ -539,14 +567,14 @@ public class Service_Cliq extends Service {
 		int Freq = mSharedPreference.getCliqFrequency();
 
 		// 클리커 주파수에서 +-100 인 주파수는 제외하고 최대값을 구한다.
-		int leftFrequencyIndex = convertFrequencyToIndex(Freq - 150);
-		int rightFrequencyIndex = convertFrequencyToIndex(Freq + 150);
+		int leftFrequencyIndex = mSharedPreference.getCliqFrequencyIndex() - 5;// convertFrequencyToIndex(Freq - 22);
+		int rightFrequencyIndex = mSharedPreference.getCliqFrequencyIndex() + 5;// convertFrequencyToIndex(Freq + 22);
 
 		float tempMax = 0;
 		// int startFrequencyIndex = convertFrequencyToIndex(Freq - 1500);
 		// int endFrequencyIndex = convertFrequencyToIndex(Freq + 1500);
-		int startFrequencyIndex = convertFrequencyToIndex(Freq - 700);
-		int endFrequencyIndex = convertFrequencyToIndex(Freq + 700);
+		int startFrequencyIndex = mSharedPreference.getCliqFrequencyIndex() - 10;// convertFrequencyToIndex(Freq - 500);
+		int endFrequencyIndex = mSharedPreference.getCliqFrequencyIndex() + 40;// convertFrequencyToIndex(Freq + 500);
 
 		int minFrequencyIndex = convertFrequencyToIndex(DETECTING_MIN_FREQ);
 		int maxFrequencyIndex = convertFrequencyToIndex(22050);
@@ -703,7 +731,7 @@ public class Service_Cliq extends Service {
 	};
 
 	private int convertIndextToFrequency(Integer frequencyIndex) {
-		return (int) Math.round((double) (22050. / 512)
+		return (int) Math.round((double) (22050. / 1024)
 				* (double) (frequencyIndex + 1));
 	}
 
@@ -786,7 +814,7 @@ public class Service_Cliq extends Service {
 	}
 
 	private int convertFrequencyToIndex(int Frequency) {
-		return (int) Math.round((512. / 22050. * Frequency - 1));
+		return (int) Math.round((1024. / 22050. * Frequency - 1));
 	}
 
 	@Override
@@ -856,7 +884,7 @@ public class Service_Cliq extends Service {
 		mMsg.obj = spectrumData;
 		mHandler.sendMessage(mMsg);
 
-		if (D) {
+		if (true) {
 			long time_newCalculated = new Date().getTime();
 			Log.i(TAG, "time calculating: "
 					+ (time_newCalculated - time_lastCalculated) + "ms");

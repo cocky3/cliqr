@@ -255,6 +255,7 @@ public class AC_Main extends Activity {
 			
 			@Override
 			public void onFinish() {
+				
 				if(0 < mCameraPref.getModeCLIQ()) {
 					isCliqSoundShutterON = true;
 				}
@@ -285,9 +286,8 @@ public class AC_Main extends Activity {
 	protected void onPause() {
 		super.onPause();
 		Log.e(TAG, "onPause");
-		
 		sendBroadcast(new Intent().setAction(Service_Cliq.ACTION_CLIQ_STOP));
-
+		
 		unregisterReceiver(mBroadcastReceiver);
 		orientationMonitor.disable();
 
@@ -330,7 +330,6 @@ public class AC_Main extends Activity {
 		}
 		
 		
-		
 		// oel: 스마트폰의 각도를 계속적으로 모니터링한다.
 		orientationMonitor = new OrientationEventListener(AC_Main.this) {
 
@@ -353,7 +352,7 @@ public class AC_Main extends Activity {
 
 		Intent service = new Intent(AC_Main.this, Service_Cliq.class);
 		stopService(service);
-
+		
 		isRunThread = false;
 		mThread = null;
 
@@ -471,7 +470,7 @@ public class AC_Main extends Activity {
 		}
 		changePreviewRatio();
 	}
-
+	
 	// 효과음들을 불러온다.
 	private void loadSoundFiles() {
 		mSoundManager.Init(AC_Main.this);
@@ -483,7 +482,7 @@ public class AC_Main extends Activity {
 		mSoundManager.addSound(6, R.raw.focus_start);
 		mSoundManager.addSound(7, R.raw.focus_start_2);
 	}
-
+	
 	private void registBroadcastReceiver() {
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Service_Cliq.ACTION_CLIQ_CLICK_TRIGERED);
@@ -644,8 +643,6 @@ public class AC_Main extends Activity {
 					intent = new Intent(Intent.ACTION_VIEW, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 					startActivityForResult(intent, ACTIVITY_GALLARY);
 					 */
-					/*sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
-							Uri.parse("file://" + getFilesDir())));*/
 					
 					/*
 					Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -777,7 +774,7 @@ public class AC_Main extends Activity {
 	private void cliqrModeOff() {
 		if (isCliqSoundShutterON == true) {
 			isCliqSoundShutterON = false;
-
+			
 			mCameraPref.setModeCLIQ(0); // 꺼져있는 상태로 저장
 			getWindow().clearFlags(
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -919,7 +916,8 @@ public class AC_Main extends Activity {
 		public void onPictureTaken(byte[] data, Camera camera) {
 			
 		
-			File file = new File(getPhotoFilename());
+			String filename = getPhotoFilename();
+			File file = new File(filename);
 
 			// whiteScreen.setVisibility(View.VISIBLE);
 			try {
@@ -936,9 +934,13 @@ public class AC_Main extends Activity {
 				fos.write(data);
 				fos.flush();
 				fos.close();
-
+				
+				//MediaServer에 추가
+				sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + file.getPath())));
+				
+				
 				// 찍은 날짜 수정
-				ExifInterface mExif = new ExifInterface(getPhotoFilename());
+				ExifInterface mExif = new ExifInterface(filename);
 				mExif.setAttribute(ExifInterface.TAG_DATETIME,
 						new Date(System.currentTimeMillis()).toString());
 				
@@ -964,22 +966,8 @@ public class AC_Main extends Activity {
 					mExif.setAttribute(ExifInterface.TAG_ORIENTATION, ""
 							+ ExifInterface.ORIENTATION_NORMAL);
 				}
-
-				mExif.saveAttributes();
-
-				BitmapFactory.Options options = new BitmapFactory.Options();
-				options.inSampleSize = 8;
-				Bitmap tempBmp = BitmapFactory.decodeByteArray(data, 0,
-						data.length, options);
-				//사진이 생겼다고 표시한다
-				isGalleryEmpty = false;
-				updateThumbnail(tempBmp);
-				tempBmp = null;
 				
-				Log.d(TAG, "Media Scanner!!!!!");
-				sendBroadcast(new Intent(
-						Intent.ACTION_MEDIA_MOUNTED,
-						Uri.parse("file://" + Environment.getExternalStorageDirectory())));
+				mExif.saveAttributes();
 				
 				
 				isTakingPhoto = false;	//사진 찍는 중 끝낫음
@@ -1011,6 +999,16 @@ public class AC_Main extends Activity {
 				continuousShootingRemain -= 1;
 				mSoundManager.play(1);
 				takePicture();
+			} else {
+				//썸네일 표시
+				BitmapFactory.Options options = new BitmapFactory.Options();
+				options.inSampleSize = 16;
+				Bitmap tempBmp = BitmapFactory.decodeByteArray(data, 0,
+						data.length, options);
+				//사진이 생겼다고 표시한다
+				isGalleryEmpty = false;
+				updateThumbnail(tempBmp);
+				tempBmp = null;
 			}
 		}
 	};
@@ -1025,10 +1023,12 @@ public class AC_Main extends Activity {
 
 		// return (file.getAbsolutePath() + "/" + System.currentTimeMillis() +
 		// AUDIO_RECORDER_FILE_EXT_WAV);
-		Format formatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
+		Format formatter = new SimpleDateFormat("yyyyMMdd_HHmmssSSS");
 		String str = formatter.format(new Date());
 
-		return (file.getAbsolutePath() + "/CliQ_R_" + str + PHOTO_FILE_EXT_JPG);
+		String filename =(file.getAbsolutePath() + "/CQ_" + str + PHOTO_FILE_EXT_JPG);
+		
+		return filename;
 	}
 
 	protected void moveSeekbar(int movement) {
@@ -1496,12 +1496,6 @@ public class AC_Main extends Activity {
 		Bitmap resized = Bitmap.createScaledBitmap(tempBmp, 122, 122, true);
 
 		btn_gallary.setImageBitmap(resized);
-
-		/*Log.d(TAG, "Media Scanner!!!!!");
-		sendBroadcast(new Intent(
-				Intent.ACTION_MEDIA_MOUNTED,
-				Uri.parse("file://" + Environment.getExternalStorageDirectory())));*/
-
 	}
 
 	BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {

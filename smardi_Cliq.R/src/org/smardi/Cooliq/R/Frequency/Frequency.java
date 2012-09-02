@@ -32,7 +32,7 @@ public class Frequency {
 	private int sampleRate = 44100;
 
 	// Audio input block size, in samples.
-	private int inputBlockSize = 1024;
+	private int inputBlockSize = 2048;
 
 	// The selected windowing function.
 	private org.hermit.audalyzer.Window.Function windowFunction = org.hermit.audalyzer.Window.Function.BLACKMAN_HARRIS;
@@ -400,8 +400,9 @@ public class Frequency {
 	}
 
 	private float getCliqFrequencyPower() {
-		int LOW_FREQ = mPref.getCliqFrequency() - 150;
-		int HIGH_FREQ = mPref.getCliqFrequency() + 150;
+		
+		/*int LOW_FREQ = mPref.getCliqFrequency() - 30;
+		int HIGH_FREQ = mPref.getCliqFrequency() + 30;
 
 		if (HIGH_FREQ > 22050) {
 			HIGH_FREQ = 22050;
@@ -409,7 +410,18 @@ public class Frequency {
 
 		int LOW_INDEX = convertFrequencyToIndex(LOW_FREQ);
 		int HIGH_INDEX = convertFrequencyToIndex(HIGH_FREQ);
-
+		 */
+		
+		int LOW_INDEX = mPref.getCliqFrequencyIndex() - 0;
+		int HIGH_INDEX = mPref.getCliqFrequencyIndex() + 0;
+		
+		
+		if(D) {
+			Log.e(TAG, "LF:"+convertIndextToFrequency(LOW_INDEX));
+			Log.e(TAG, "CF:" + mPref.getCliqFrequencyIndex() + " " +convertIndextToFrequency(mPref.getCliqFrequencyIndex()) + " 2:"+mPref.getCliqFrequency());
+			Log.e(TAG, "RF:"+convertIndextToFrequency(HIGH_INDEX));
+		}
+		
 		float max = 0;
 		int maxINDEX = 0;
 
@@ -430,8 +442,8 @@ public class Frequency {
 			}
 		}
 
-		mPref.setCliqFrequencyIndex(maxINDEX);
-
+		//mPref.setCliqFrequencyIndex(maxINDEX);
+		
 		return max;
 	}
 
@@ -451,14 +463,14 @@ public class Frequency {
 		int Freq = mPref.getCliqFrequency();
 
 		// 클리커 주파수에서 +-100 인 주파수는 제외하고 최대값을 구한다.
-		int leftFrequencyIndex = convertFrequencyToIndex(Freq - 150);
-		int rightFrequencyIndex = convertFrequencyToIndex(Freq + 150);
+		int leftFrequencyIndex = mPref.getCliqFrequencyIndex() - 5;// convertFrequencyToIndex(Freq - 22);
+		int rightFrequencyIndex = mPref.getCliqFrequencyIndex() + 5;// convertFrequencyToIndex(Freq + 22);
 
 		float tempMax = 0;
 		// int startFrequencyIndex = convertFrequencyToIndex(Freq - 1500);
 		// int endFrequencyIndex = convertFrequencyToIndex(Freq + 1500);
-		int startFrequencyIndex = convertFrequencyToIndex(Freq - 600);
-		int endFrequencyIndex = convertFrequencyToIndex(Freq + 600);
+		int startFrequencyIndex = mPref.getCliqFrequencyIndex() - 10;// convertFrequencyToIndex(Freq - 500);
+		int endFrequencyIndex = mPref.getCliqFrequencyIndex() + 40;// convertFrequencyToIndex(Freq + 500);
 
 		int minFrequencyIndex = convertFrequencyToIndex(DETECTING_MIN_FREQ);
 		int maxFrequencyIndex = convertFrequencyToIndex(22050);
@@ -485,9 +497,6 @@ public class Frequency {
 		return (float) ((float) (Math.log10(power) / 6f + 1f) * 400.);
 	}
 
-	private int convertFrequencyToIndex(int Frequency) {
-		return (int) Math.round((inputBlockSize / 2 / 22050. * Frequency - 1));
-	}
 
 	/**
 	 * Handle audio input. This is called on the thread of the parent surface.
@@ -596,11 +605,23 @@ public class Frequency {
 	final int MAX_COUNT_PRESS = 3;
 	
 	private boolean check_CLIQ_Pressed() {
-		float powerCliqr = (float) (getCliqFrequencyPower() - 3E-5);
-		float powerThred = (float) (getCliqThreadhold() - (3E-5));
+		float powerCliqr = (float) (getCliqFrequencyPower());// - 3E-5);
+		float powerThred = (float) (getCliqThreadhold());// - (3E-5));
 		
 		float multiple = 0;
-		if(0 < powerThred) {
+		
+		multiple = getDB(powerCliqr)/getDB(powerThred); 
+		
+		if(1.1 < multiple) {
+			countPressed += 1;
+		} else {
+			countPressed = 0;
+			return false;
+		}
+		
+		//Log.e(TAG, "C:"+getDB(powerCliqr) + "\t\t  T:"+ getDB(powerThred) + "\t\t   multiple:"+multiple);
+		
+		/*if(0 < powerThred) {
 			multiple = powerCliqr / powerThred;
 			
 			if(D) {
@@ -625,7 +646,7 @@ public class Frequency {
 				countPressed = 0;
 				return false;
 			}
-		}
+		}*/
 		
 		
 		if(MAX_COUNT_PRESS <= countPressed) {
@@ -633,6 +654,11 @@ public class Frequency {
 		} else {
 			return false;
 		}
+	}
+	
+	
+	public int convertFrequencyToIndex(int Frequency) {
+		return (int) Math.round((inputBlockSize / 2 / 22050. * Frequency - 1));
 	}
 
 	public int convertIndextToFrequency(Integer frequencyIndex) {

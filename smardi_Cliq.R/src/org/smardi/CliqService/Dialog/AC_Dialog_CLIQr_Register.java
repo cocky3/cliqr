@@ -115,6 +115,7 @@ public class AC_Dialog_CLIQr_Register extends Activity {
 	protected void apply() {
 		Log.e("CC", "FFF:"+final_CLIQr_freq);
 		mPref.setCliqFrequency(final_CLIQr_freq);
+		mPref.setCliqFrequencyIndex(mFreq.convertFrequencyToIndex(final_CLIQr_freq));
 	}
 
 	
