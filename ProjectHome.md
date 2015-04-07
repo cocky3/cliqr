@@ -1,0 +1,1 @@
+Take a picture in android triggerd by CLIQ.r (Remote controller)
